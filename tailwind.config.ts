@@ -17,8 +17,23 @@ export default {
 				'2xl': '1400px'
 			}
 		},
-		extend: {
-			colors: {
+			extend: {
+				fontFamily: {
+					sans: [
+						"Inter",
+						"system-ui",
+						"Segoe UI",
+						"Roboto",
+						"Helvetica Neue",
+						"Arial",
+						"Noto Sans",
+						"Apple Color Emoji",
+						"Segoe UI Emoji",
+						"Segoe UI Symbol",
+						"Noto Color Emoji",
+					],
+				},
+				colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -64,10 +79,7 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				}
 			},
-			backgroundImage: {
-				'gradient-primary': 'var(--gradient-primary)',
-				'gradient-subtle': 'var(--gradient-subtle)'
-			},
+			/* No custom gradients in this theme */
 			boxShadow: {
 				'elegant': 'var(--shadow-elegant)',
 				'glow': 'var(--shadow-glow)'

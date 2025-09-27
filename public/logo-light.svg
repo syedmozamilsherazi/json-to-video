@@ -1,0 +1,39 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="light-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#141212;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FA4616;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer diamond/square -->
+  <path d="M60 10 L100 35 L100 85 L60 110 L20 85 L20 35 Z" 
+        stroke="url(#light-gradient)" 
+        stroke-width="2" 
+        fill="none"/>
+  
+  <!-- Second layer -->
+  <path d="M60 20 L85 35 L85 75 L60 90 L35 75 L35 35 Z" 
+        stroke="url(#light-gradient)" 
+        stroke-width="2" 
+        fill="none" 
+        opacity="0.8"/>
+  
+  <!-- Inner diamond/square -->
+  <path d="M60 30 L70 40 L70 60 L60 70 L50 60 L50 40 Z" 
+        stroke="#141212" 
+        stroke-width="2" 
+        fill="none"/>
+  
+  <!-- Play triangle in center -->
+  <path d="M55 45 L55 55 L63 50 Z" 
+        fill="#FA4616" 
+        opacity="0.9"/>
+  
+  <!-- Accent elements for modern look -->
+  <circle cx="25" cy="25" r="2" fill="#FA4616" opacity="0.6"/>
+  <circle cx="95" cy="95" r="1.5" fill="#141212" opacity="0.7"/>
+  
+  <!-- Small geometric accent -->
+  <path d="M90 25 L92 23 L94 25 L92 27 Z" fill="#FA4616" opacity="0.5"/>
+</svg>

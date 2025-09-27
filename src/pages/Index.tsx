@@ -240,66 +240,49 @@ const Index = () => {
     }
   };
   const urlCount = contentLinks.split('\n').filter(url => url.trim().length > 0).length;
-  return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-secondary/20 dark:from-background dark:via-slate-900/50 dark:to-slate-800/20">
+  return <div className="min-h-screen bg-background">
       <Navigation />
       
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 pt-8 pb-4">
-        <div className="max-w-4xl mx-auto text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-lg">
-              <Sparkles className="h-6 w-6 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-indigo-400">
-              Community Video Generator
-            </h1>
-          </div>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Transform your community content into engaging videos with automated subtitles and professional styling.
-          </p>
-        </div>
-      </div>
-      
-      <div className="container mx-auto px-4 pb-12">
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-            <Card className="border border-border/50 shadow-elegant bg-card/80 backdrop-blur-sm dark:bg-card/90 dark:border-slate-700/50 dark:shadow-2xl overflow-hidden">
+            <Card className="border border-[#E0E0E0] shadow-sm bg-card overflow-hidden rounded-2xl">
             
             
             <CardContent className="space-y-8 p-8">
               {/* Video Type Selection */}
-              <div className="space-y-6 p-6 bg-gradient-to-r from-slate-50/50 to-slate-100/50 dark:from-slate-800/20 dark:to-slate-700/20 rounded-xl border border-slate-200/50 dark:border-slate-700/30">
+              <div className="space-y-6 p-6 bg-muted rounded-xl border border-[#E0E0E0]">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg shadow-sm">
-                    <Play className="h-4 w-4 text-white" />
+                  <div className="p-2 bg-[#E0E0E0] rounded-lg shadow-sm">
+                    <Play className="h-4 w-4 text-[#000000]" />
                   </div>
-                  <Label className="text-lg font-semibold text-slate-800 dark:text-slate-100">Choose Content Type</Label>
+                  <Label className="text-lg font-semibold text-[#000000]">Choose Content Type</Label>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className={`group relative flex flex-col items-center gap-4 p-6 rounded-xl border cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${videoType === 'clips' ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 shadow-lg dark:shadow-purple-500/10' : 'border-border dark:border-slate-600/50 bg-white/50 dark:bg-slate-800/30 hover:bg-white/80 dark:hover:bg-slate-700/40'}`} onClick={() => setVideoType('clips')}>
-                    <div className={`p-4 rounded-full transition-all duration-300 ${videoType === 'clips' ? 'bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg' : 'bg-slate-100 dark:bg-slate-700 group-hover:bg-slate-200 dark:group-hover:bg-slate-600'}`}>
-                      <Video className={`h-6 w-6 ${videoType === 'clips' ? 'text-white' : 'text-slate-600 dark:text-slate-300'}`} />
+                  <div className={`group relative flex flex-col items-center gap-4 p-6 rounded-xl border cursor-pointer transition-colors ${videoType === 'clips' ? 'bg-[#E0E0E0] text-[#000000] border-[#E0E0E0]' : 'bg-transparent text-[#6E6E6E] border-[#E0E0E0] hover:bg-[#F2F2F2]'}`} onClick={() => setVideoType('clips')}>
+                    <div className={`p-4 rounded-full transition-colors bg-transparent`}>
+                      <Video className={`h-6 w-6 ${videoType === 'clips' ? 'text-[#000000]' : 'text-[#6E6E6E]'}`} />
                     </div>
                     <div className="text-center">
-                      <h3 className="font-semibold text-base text-slate-800 dark:text-slate-100">Video Clips</h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Use video content with motion</p>
+                      <h3 className={`text-base ${videoType === 'clips' ? 'font-semibold text-[#000000]' : 'font-normal text-[#6E6E6E]'}`}>Video Clips</h3>
+                      <p className={`text-sm mt-1 ${videoType === 'clips' ? 'text-[#000000]' : 'text-[#6E6E6E]'}`}>Use video content with motion</p>
                     </div>
                     {videoType === 'clips' && (
                       <div className="absolute top-3 right-3">
-                        <CheckCircle2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        <CheckCircle2 className="h-5 w-5 text-[#000000]" />
                       </div>
                     )}
                   </div>
-                  <div className={`group relative flex flex-col items-center gap-4 p-6 rounded-xl border cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${videoType === 'images' ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 shadow-lg dark:shadow-purple-500/10' : 'border-border dark:border-slate-600/50 bg-white/50 dark:bg-slate-800/30 hover:bg-white/80 dark:hover:bg-slate-700/40'}`} onClick={() => setVideoType('images')}>
-                    <div className={`p-4 rounded-full transition-all duration-300 ${videoType === 'images' ? 'bg-gradient-to-br from-purple-500 to-indigo-600 shadow-lg' : 'bg-slate-100 dark:bg-slate-700 group-hover:bg-slate-200 dark:group-hover:bg-slate-600'}`}>
-                      <Image className={`h-6 w-6 ${videoType === 'images' ? 'text-white' : 'text-slate-600 dark:text-slate-300'}`} />
+                  <div className={`group relative flex flex-col items-center gap-4 p-6 rounded-xl border cursor-pointer transition-colors ${videoType === 'images' ? 'bg-[#E0E0E0] text-[#000000] border-[#E0E0E0]' : 'bg-transparent text-[#6E6E6E] border-[#E0E0E0] hover:bg-[#F2F2F2]'}`} onClick={() => setVideoType('images')}>
+                    <div className={`p-4 rounded-full transition-colors bg-transparent`}>
+                      <Image className={`h-6 w-6 ${videoType === 'images' ? 'text-[#000000]' : 'text-[#6E6E6E]'}`} />
                     </div>
                     <div className="text-center">
-                      <h3 className="font-semibold text-base text-slate-800 dark:text-slate-100">Static Images</h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Use still image content</p>
+                      <h3 className={`text-base ${videoType === 'images' ? 'font-semibold text-[#000000]' : 'font-normal text-[#6E6E6E]'}`}>Static Images</h3>
+                      <p className={`text-sm mt-1 ${videoType === 'images' ? 'text-[#000000]' : 'text-[#6E6E6E]'}`}>Use still image content</p>
                     </div>
                     {videoType === 'images' && (
                       <div className="absolute top-3 right-3">
-                        <CheckCircle2 className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        <CheckCircle2 className="h-5 w-5 text-[#000000]" />
                       </div>
                     )}
                   </div>
@@ -307,30 +290,30 @@ const Index = () => {
               </div>
 
               {/* Content URLs */}
-              <div className="space-y-6 p-6 bg-gradient-to-r from-blue-50/30 to-cyan-50/30 dark:from-blue-900/10 dark:to-cyan-900/10 rounded-xl border border-blue-200/30 dark:border-blue-800/20">
+              <div className="space-y-6 p-6 bg-muted rounded-xl border border-[#E0E0E0]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg shadow-sm">
+                    <div className="p-2 bg-[#E0E0E0] rounded-lg shadow-sm">
                       {videoType === 'clips' ? (
-                        <Video className="h-4 w-4 text-white" />
+                        <Video className="h-4 w-4 text-[#000000]" />
                       ) : (
-                        <Image className="h-4 w-4 text-white" />
+                        <Image className="h-4 w-4 text-[#000000]" />
                       )}
                     </div>
                     <div>
-                      <Label className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                      <Label className="text-lg font-semibold text-foreground">
                         {videoType === 'clips' ? 'Video Clip Links' : 'Image Links'} 
                         <span className="text-red-500 ml-1">*</span>
                       </Label>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      <p className="text-sm text-[#6E6E6E] mt-1">
                         Paste your {videoType === 'clips' ? 'video' : 'image'} URLs, one per line
                       </p>
                     </div>
                   </div>
                   {urlCount > 0 && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                      <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full border border-[#E5E7EB]">
+                      <CheckCircle2 className="h-4 w-4 text-foreground" />
+                      <span className="text-sm font-medium text-foreground">
                         {urlCount} URLs
                       </span>
                     </div>
@@ -341,47 +324,47 @@ const Index = () => {
                     placeholder={`Example:\nhttps://example.com/${videoType === 'clips' ? 'video1.mp4' : 'image1.jpg'}\nhttps://example.com/${videoType === 'clips' ? 'video2.mp4' : 'image2.jpg'}`}
                     value={contentLinks} 
                     onChange={e => setContentLinks(e.target.value)} 
-                    className="min-h-[140px] resize-none bg-white/70 dark:bg-slate-800/50 border-slate-200 dark:border-slate-600 focus:border-blue-400 dark:focus:border-blue-500 transition-colors" 
+                    className="min-h-[140px] resize-none bg-card border-[#E0E0E0] focus:border-[#000000] transition-colors" 
                   />
                   {!contentLinks.trim() && (
                     <div className="absolute top-3 right-3">
-                      <AlertCircle className="h-5 w-5 text-amber-500" />
+                      <AlertCircle className="h-5 w-5 text-[#6B6F76]" />
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Audio Upload */}
-              <div className="space-y-6 p-6 bg-gradient-to-r from-emerald-50/30 to-teal-50/30 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-xl border border-emerald-200/30 dark:border-emerald-800/20">
+              <div className="space-y-6 p-6 bg-muted rounded-xl border border-[#E5E7EB]">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg shadow-sm">
-                    <Headphones className="h-4 w-4 text-white" />
+                  <div className="p-2 bg-[#E0E0E0] rounded-lg shadow-sm">
+                    <Headphones className="h-4 w-4 text-[#000000]" />
                   </div>
                   <div>
-                    <Label className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                    <Label className="text-lg font-semibold text-[#000000]">
                       Upload Voiceover <span className="text-red-500 ml-1">*</span>
                     </Label>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="text-sm text-[#6E6E6E] mt-1">
                       Add your audio narration or voiceover file
                     </p>
                   </div>
                 </div>
                 
-                <div className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 cursor-pointer overflow-hidden ${isDragOver ? 'border-emerald-400 bg-emerald-50/50 dark:border-emerald-500 dark:bg-emerald-500/10 scale-[1.02]' : 'border-slate-300 hover:border-slate-400 dark:border-slate-600/50 dark:hover:border-slate-500'} ${uploadedAudio ? 'bg-emerald-50/80 border-emerald-300 dark:bg-emerald-900/20 dark:border-emerald-600/50' : 'bg-white/50 dark:bg-slate-800/30 hover:bg-white/80 dark:hover:bg-slate-700/40'}`} onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onClick={() => !uploadedAudio && fileInputRef.current?.click()}>
+                        <div className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer overflow-hidden ${isDragOver ? 'border-[#E0E0E0] bg-[#F2F2F2]' : 'border-[#E0E0E0]'} ${uploadedAudio ? 'bg-[#F2F2F2]' : 'bg-card hover:bg-[#F2F2F2]'}`} onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onClick={() => !uploadedAudio && fileInputRef.current?.click()}>
                   {uploadedAudio ? (
                     <div className="space-y-4">
                       <div className="flex items-center justify-center gap-3">
-                        <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full shadow-sm">
-                          <FileAudio className="h-5 w-5 text-white" />
+                        <div className="p-3 bg-[#E0E0E0] rounded-full shadow-sm">
+                          <FileAudio className="h-5 w-5 text-[#000000]" />
                         </div>
                         <div className="flex-1 text-left">
-                          <p className="font-semibold text-slate-800 dark:text-slate-100 truncate">
+                          <p className="font-semibold text-foreground truncate">
                             {uploadedAudio.name}
                           </p>
                           {videoDuration && (
                             <div className="flex items-center gap-2 mt-1">
-                              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                              <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                              <div className="w-2 h-2 bg-[#000000] rounded-full animate-pulse"></div>
+                              <span className="text-sm text-foreground font-medium">
                                 Duration: {videoDuration} seconds
                               </span>
                             </div>
@@ -404,18 +387,18 @@ const Index = () => {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      <div className="mx-auto w-16 h-16 bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-full flex items-center justify-center shadow-sm">
+                      <div className="mx-auto w-16 h-16 bg-[#F2F2F2] rounded-full flex items-center justify-center shadow-sm">
                         {isProcessingAudio ? (
-                          <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                          <div className="w-6 h-6 border-2 border-[#000000] border-t-transparent rounded-full animate-spin" />
                         ) : (
-                          <Upload className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                          <Upload className="h-6 w-6 text-[#000000]" />
                         )}
                       </div>
                       <div>
-                        <p className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-1">
+                        <p className="text-lg font-semibold text-foreground mb-1">
                           {isProcessingAudio ? "Processing Audio..." : "Drop your audio file here"}
                         </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-[#6E6E6E]">
                           Or click to browse • MP3, WAV, M4A supported
                         </p>
                       </div>
@@ -430,16 +413,16 @@ const Index = () => {
               </div>
 
               {/* Background Music */}
-              <div className="space-y-6 p-6 bg-gradient-to-r from-violet-50/30 to-purple-50/30 dark:from-violet-900/10 dark:to-purple-900/10 rounded-xl border border-violet-200/30 dark:border-violet-800/20">
+              <div className="space-y-6 p-6 bg-muted rounded-xl border border-[#E0E0E0]">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg shadow-sm">
-                    <Music className="h-4 w-4 text-white" />
+                  <div className="p-2 bg-[#E0E0E0] rounded-lg shadow-sm">
+                    <Music className="h-4 w-4 text-[#000000]" />
                   </div>
                   <div>
-                    <Label className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+                    <Label className="text-lg font-semibold text-[#000000]">
                       Background Music
                     </Label>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    <p className="text-sm text-[#6E6E6E] mt-1">
                       Optional: Add background music to enhance your video
                     </p>
                   </div>
@@ -449,20 +432,20 @@ const Index = () => {
                     placeholder="https://example.com/background-music.mp3" 
                     value={musicLink} 
                     onChange={e => setMusicLink(e.target.value)} 
-                    className="bg-white/70 dark:bg-slate-800/50 border-slate-200 dark:border-slate-600 focus:border-violet-400 dark:focus:border-violet-500 transition-colors pl-4 pr-12" 
+                    className="bg-card border-[#E0E0E0] focus:border-[#000000] transition-colors pl-4 pr-12" 
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     {musicLink.trim() ? (
-                      <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                      <CheckCircle2 className="h-5 w-5 text-[#000000]" />
                     ) : (
-                      <Music className="h-5 w-5 text-slate-400" />
+                      <Music className="h-5 w-5 text-[#6E6E6E]" />
                     )}
                   </div>
                 </div>
               </div>
 
               {/* Subtitles Toggle */}
-              <div className="flex items-center justify-between p-4 bg-secondary/20 dark:bg-slate-800/30 rounded-lg border border-border/30 dark:border-slate-700/30">
+              <div className="flex items-center justify-between p-4 bg-muted rounded-lg border border-[#E0E0E0]">
                 <div>
                   <Label className="text-base font-medium">Subtitles</Label>
                   <p className="text-sm text-muted-foreground">Auto-generate subtitles from audio</p>
@@ -470,29 +453,11 @@ const Index = () => {
                 <Switch checked={subtitleStyleSelected} onCheckedChange={setSubtitleStyleSelected} />
               </div>
               
-              {/* Pro Tip Section */}
-              <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 dark:from-slate-800/50 dark:via-slate-700/50 dark:to-slate-800/50 rounded-lg p-4 border border-blue-200/50 dark:border-slate-600/30 backdrop-blur-sm">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 dark:from-blue-400 dark:to-purple-500 rounded-full flex items-center justify-center shadow-sm">
-                    <Lightbulb className="h-4 w-4 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-sm text-slate-800 dark:text-slate-100 mb-1">
-                      Pro Tip
-                    </h3>
-                    <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                      For best results, use high-quality {videoType === 'clips' ? 'video clips' : 'images'} and ensure your voiceover is clear. 
-                      Keep your content URLs organized and consider adding background music to enhance engagement.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
               {/* Generate Button */}
               <Button 
                 onClick={generateAndRenderVideo} 
                 disabled={isGenerating || !uploadedAudio || !contentLinks.trim() || !hasApiKey} 
-                className="group w-full h-16 text-base font-semibold bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600 hover:from-purple-700 hover:via-purple-600 hover:to-indigo-700 dark:from-purple-500 dark:via-purple-400 dark:to-indigo-500 dark:hover:from-purple-600 dark:hover:via-purple-500 dark:hover:to-indigo-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:transform-none disabled:shadow-none text-white rounded-xl" 
+                className="w-full h-16 text-base font-semibold bg-black hover:bg-black/90 text-white rounded-xl shadow-sm disabled:opacity-50" 
                 size="lg"
               >
                 {isGenerating ? (
