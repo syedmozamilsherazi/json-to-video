@@ -1,8 +1,6 @@
 // api/check-access.ts
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import Whop from "@whop/api"; // official Whop server SDK
-
-const whop = new Whop(process.env.WHOP_API_KEY as string);
+import * as WhopAPI from "@whop/api"; // official Whop server SDK (module namespace)
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -13,10 +11,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Verify token → get user
-    const { user_id } = await whop.auth.verifyUserToken({ token });
+    const { user_id } = await WhopAPI.auth.verifyUserToken({ token });
 
     // Check access
-    const access = await whop.access.checkIfUserHasAccessToAccessPass({
+    const access = await WhopAPI.access.checkIfUserHasAccessToAccessPass({
       access_pass_id: process.env.WHOP_ACCESS_PASS_ID as string,
       user_id,
     });
