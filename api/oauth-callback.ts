@@ -30,12 +30,12 @@ interface WhopMembershipResponse {
   [key: string]: any;
 }
 
-// Hardcoded Whop credentials - DO NOT use environment variables
-const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
-const WHOP_APP_ID = 'app_z0Hznij7sCMJGz';
-const PRODUCT_ID = 'prod_iZZC4IzX2mi7v'; // Your access pass product ID
+// Whop credentials and product ID from environment variables
+const WHOP_API_KEY = process.env.WHOP_API_KEY as string;
+const WHOP_APP_ID = process.env.WHOP_APP_ID as string;
+const PRODUCT_ID = (process.env.WHOP_ACCESS_PASS_ID || process.env.WHOP_PRODUCT_ID || 'prod_iZZC4IzX2mi7v') as string; // fallback to provided product id
 
-// Initialize Whop SDK with hardcoded credentials
+// Initialize Whop SDK with env-based credentials
 const whopApi = WhopServerSdk({
   appApiKey: WHOP_API_KEY,
   appId: WHOP_APP_ID,

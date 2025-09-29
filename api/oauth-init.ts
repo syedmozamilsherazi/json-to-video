@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { WhopServerSdk } from '@whop/api';
 
-// Hardcoded Whop credentials - DO NOT use environment variables
-const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
-const WHOP_APP_ID = 'app_z0Hznij7sCMJGz';
+// Read Whop credentials from environment variables (configure in Vercel)
+const WHOP_API_KEY = process.env.WHOP_API_KEY as string;
+const WHOP_APP_ID = process.env.WHOP_APP_ID as string;
 
-// Initialize Whop SDK with hardcoded credentials
+// Initialize Whop SDK with env-based credentials
 const whopApi = WhopServerSdk({
   appApiKey: WHOP_API_KEY,
   appId: WHOP_APP_ID,

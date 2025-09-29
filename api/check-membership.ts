@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { WhopServerSdk } from '@whop/api';
 
-// Hardcoded Whop credentials and access pass product ID
-const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
-const WHOP_APP_ID = 'app_z0Hznij7sCMJGz';
-const ACCESS_PASS_PRODUCT_ID = 'prod_iZZC4IzX2mi7v'; // Your access pass product ID
+// Whop credentials and access pass product ID from environment
+const WHOP_API_KEY = process.env.WHOP_API_KEY as string;
+const WHOP_APP_ID = process.env.WHOP_APP_ID as string;
+const ACCESS_PASS_PRODUCT_ID = (process.env.WHOP_ACCESS_PASS_ID || process.env.WHOP_PRODUCT_ID || 'prod_iZZC4IzX2mi7v') as string;
 
 // Initialize Whop SDK
 const whopApi = WhopServerSdk({
