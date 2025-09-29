@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none">
+  <defs>
+    <linearGradient id="whop-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FA4616;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DAF405;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="8" cy="8" r="7.5" fill="#141212" stroke="#FA4616" stroke-width="0.5"/>
+  
+  <!-- Video play icon -->
+  <polygon points="6,5 6,11 10,8" fill="url(#whop-gradient)" />
+  
+  <!-- Small accent dot -->
+  <circle cx="12" cy="4" r="1" fill="#DAF405"/>
+</svg>

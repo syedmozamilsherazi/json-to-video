@@ -9,20 +9,32 @@ export function PaymentButton({ displayText, planId }: { displayText: string; pl
 
   const handleClick = useCallback(async () => {
     setIsLoading(true);
-    const result = await iframeSdk.inAppPurchase({ planId });
+    try {
+      const result = await iframeSdk.inAppPurchase({ planId });
 
-    if (result.status === "error") {
-      alert(result.error);
+      if (result.status === "error") {
+        alert(result.error);
+        setIsLoading(false);
+        return;
+      }
+
+      // If redirect status, the SDK will handle the redirect
+      // No need to reload as we're navigating away
+      if (result.status === "redirect") {
+        // Loading will continue until redirect happens
+        return;
+      }
+
+      // For other statuses (like success with token)
+      if (result.token) {
+        localStorage.setItem("whop_token", result.token);
+        window.location.reload();
+      }
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      alert('Payment failed. Please try again.');
       setIsLoading(false);
-      return;
     }
-
-    // Save token to localStorage for API calls
-    if (result.token) {
-      localStorage.setItem("whop_token", result.token);
-    }
-
-    window.location.reload(); // refresh → re-check access
   }, [planId, iframeSdk]);
 
   return (

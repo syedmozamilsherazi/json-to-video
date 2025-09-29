@@ -27,32 +27,26 @@ export const WhopProvider: React.FC<WhopProviderProps> = ({ children }) => {
     // Load Whop iframe SDK dynamically
     const loadWhopSdk = async () => {
       try {
-        // Create a mock iframe SDK for now since the real one has issues
-        const mockIframeSdk = {
+        // Create a proper Whop SDK implementation
+        const whopSdk = {
           inAppPurchase: async ({ planId }: { planId: string }) => {
             try {
-              // For now, redirect to Whop checkout page
-              const checkoutUrl = `https://whop.com/checkout/${planId}?redirect_url=${encodeURIComponent(window.location.href)}`;
+              // Use the correct Whop checkout URL format
+              const baseUrl = window.location.origin;
+              const checkoutUrl = `https://whop.com/checkout/${planId}?return_url=${encodeURIComponent(baseUrl)}`;
               
-              // Open in popup or redirect
-              const popup = window.open(checkoutUrl, 'whop-checkout', 'width=600,height=700');
+              // Redirect directly to Whop checkout (this is the standard flow)
+              window.location.href = checkoutUrl;
               
-              // Listen for completion
-              return new Promise((resolve) => {
-                const checkClosed = setInterval(() => {
-                  if (popup?.closed) {
-                    clearInterval(checkClosed);
-                    resolve({ status: 'success', token: 'temp-token' });
-                  }
-                }, 1000);
-              });
-            } catch (error) {
+              // Return immediately since we're redirecting
+              return { status: 'redirect' };
+            } catch (error: any) {
               return { status: 'error', error: error.message };
             }
           }
         };
         
-        setIframeSdk(mockIframeSdk);
+        setIframeSdk(whopSdk);
         setIsLoaded(true);
       } catch (error) {
         console.error('Failed to load Whop SDK:', error);

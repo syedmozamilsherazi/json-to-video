@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="none">
+  <defs>
+    <linearGradient id="whop-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FA4616;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DAF405;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#141212;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2A2A2A;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="96" cy="96" r="90" fill="url(#bg-gradient)" stroke="#FA4616" stroke-width="6"/>
+  
+  <!-- Modern video/media rectangle -->
+  <rect x="42" y="66" width="84" height="60" rx="12" fill="url(#whop-gradient)" opacity="0.9"/>
+  
+  <!-- Play button in center -->
+  <polygon points="78,84 78,108 102,96" fill="#141212" opacity="0.8"/>
+  
+  <!-- Whop-style accent elements -->
+  <circle cx="54" cy="48" r="9" fill="#DAF405"/>
+  <circle cx="138" cy="144" r="6" fill="#FA4616"/>
+  
+  <!-- Studio/sparkle elements -->
+  <path d="M144 60 L150 48 L156 60 L168 54 L156 72 L144 60 Z" fill="#DAF405" opacity="0.7"/>
+  <path d="M30 130 L36 118 L42 130 L54 124 L42 142 L30 130 Z" fill="#FA4616" opacity="0.6"/>
+</svg>

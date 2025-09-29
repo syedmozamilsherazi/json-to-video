@@ -10,15 +10,53 @@ export default function ExperiencePage() {
     const checkAccess = async () => {
       setLoading(true);
       try {
+        // Check if we're returning from Whop with auth info
+        const urlParams = new URLSearchParams(window.location.search);
+        const whopToken = urlParams.get('token') || urlParams.get('access_token');
+        const whopError = urlParams.get('error');
+        
+        // Handle Whop redirect with token
+        if (whopToken) {
+          localStorage.setItem('whop_token', whopToken);
+          // Clean up URL parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
+        // Handle Whop redirect with error
+        if (whopError) {
+          console.error('Whop authentication error:', whopError);
+          // Clean up URL parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
+        const token = whopToken || localStorage.getItem("whop_token");
+        
+        if (!token) {
+          setHasAccess(false);
+          setLoading(false);
+          return;
+        }
+        
         const res = await fetch("/api/check-access", {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("whop_token") || ""}`,
+            Authorization: `Bearer ${token}`,
           },
         });
+        
+        if (!res.ok) {
+          console.error('Access check failed:', res.status, res.statusText);
+          // If 401/403, clear invalid token
+          if (res.status === 401 || res.status === 403) {
+            localStorage.removeItem('whop_token');
+          }
+          setHasAccess(false);
+          return;
+        }
+        
         const data = await res.json();
         setHasAccess(data.hasAccess);
       } catch (err) {
-        console.error(err);
+        console.error('Access check error:', err);
         setHasAccess(false);
       } finally {
         setLoading(false);
