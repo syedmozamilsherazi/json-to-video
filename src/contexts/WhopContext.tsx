@@ -120,11 +120,31 @@ export const WhopProvider: React.FC<WhopProviderProps> = ({ children }) => {
     // Use the proper OAuth initialization endpoint
     console.log('Starting OAuth flow via initialization endpoint...');
     
-    // Redirect to our OAuth initialization route which uses the Whop SDK
-    const initUrl = `/api/oauth/init?next=${encodeURIComponent(window.location.pathname)}`;
+    // Check if we're in production (Vercel) or local development
+    const isProduction = window.location.hostname !== 'localhost';
     
-    console.log('Redirecting to OAuth init:', initUrl);
-    window.location.href = initUrl;
+    if (isProduction) {
+      // In production, use the API route
+      const initUrl = `/api/oauth-init?next=${encodeURIComponent(window.location.pathname)}`;
+      console.log('Redirecting to OAuth init (production):', initUrl);
+      window.location.href = initUrl;
+    } else {
+      // For local development, redirect directly to Whop with manual OAuth
+      const whopAppId = import.meta.env.VITE_PUBLIC_WHOP_APP_ID;
+      const baseUrl = window.location.origin;
+      const redirectUri = 'https://json-to-video.vercel.app/api/oauth-callback'; // Use production callback
+      const state = Math.random().toString(36).substring(7);
+      
+      // Store state for later verification
+      localStorage.setItem('oauth_state', state);
+      
+      const authUrl = `https://whop.com/oauth?client_id=${whopAppId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=user%3Aread%20memberships%3Aread&state=${state}`;
+      
+      console.log('Local development - redirecting to Whop OAuth:', authUrl);
+      alert('Local Development Mode:\n\nYou\'ll be redirected to Whop OAuth.\nAfter authentication, you\'ll be redirected to the production site.\nThen manually return to localhost:8080 to continue.');
+      
+      window.location.href = authUrl;
+    }
   };
   
   const logout = () => {
