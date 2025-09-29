@@ -133,57 +133,65 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const userData = userResponse.data;
-    console.log('Got user data:', userData.id);
+    const userId = userData.id;
+    console.log('Got user data:', userId);
 
-    // Check user's memberships using the SDK
-    const membershipsResponse = await userClient.users.getMemberships();
-    
-    let hasAccess = false;
-    if (membershipsResponse.ok) {
-      const memberships = membershipsResponse.data;
-      console.log('Found memberships:', memberships.length);
+    // Check membership status using server-side API call (not storing OAuth token)
+    try {
+      const membershipResponse = await fetch(`${baseUrl}/api/check-membership`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ user_id: userId }),
+      });
+
+      let hasAccess = false;
+      if (membershipResponse.ok) {
+        const membershipData = await membershipResponse.json();
+        hasAccess = membershipData.hasAccess;
+        console.log('Membership check result:', hasAccess);
+      } else {
+        console.warn('Failed to check membership, defaulting to no access');
+        hasAccess = false;
+      }
+
+      // Set secure HttpOnly cookies for user ID and access status (cross-device)
+      const userIdCookie = `whop_user_id=${userId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`; // 30 days
+      const accessCookie = `whop_has_access=${hasAccess}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`; // 30 days
+      const loginStatusCookie = `whop_logged_in=true; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`; // 30 days
+
+      // Determine final redirect URL
+      const finalRedirectUrl = stateData.next && stateData.next !== '/' ? stateData.next : '/home';
+      const redirectUrl = new URL(finalRedirectUrl, baseUrl);
       
-      // Check if user has any active memberships
-      hasAccess = memberships.some((membership: any) => 
-        membership.status === 'active' || membership.status === 'trialing'
-      );
+      // Add success parameters to URL for frontend processing
+      redirectUrl.searchParams.set('auth', 'success');
+      redirectUrl.searchParams.set('user_id', userId);
+      redirectUrl.searchParams.set('has_access', hasAccess.toString());
+
+      console.log('Redirecting to:', redirectUrl.toString());
+
+      // Set cookies and redirect (no OAuth token stored on frontend)
+      res.setHeader('Set-Cookie', [userIdCookie, accessCookie, loginStatusCookie]);
+      res.redirect(redirectUrl.toString());
+
+    } catch (membershipError) {
+      console.error('Error checking membership:', membershipError);
+      // Still proceed with login but without access
+      const userIdCookie = `whop_user_id=${userId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`;
+      const accessCookie = `whop_has_access=false; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`;
+      const loginStatusCookie = `whop_logged_in=true; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`;
       
-      console.log('User has access:', hasAccess);
-    } else {
-      console.warn('Failed to fetch memberships:', membershipsResponse.code, membershipsResponse.raw?.statusText);
-      // Don't fail the entire flow if memberships can't be fetched
-      hasAccess = false;
+      const finalRedirectUrl = stateData.next && stateData.next !== '/' ? stateData.next : '/home';
+      const redirectUrl = new URL(finalRedirectUrl, baseUrl);
+      redirectUrl.searchParams.set('auth', 'success');
+      redirectUrl.searchParams.set('user_id', userId);
+      redirectUrl.searchParams.set('has_access', 'false');
+      
+      res.setHeader('Set-Cookie', [userIdCookie, accessCookie, loginStatusCookie]);
+      res.redirect(redirectUrl.toString());
     }
-
-    // Set access token in secure HttpOnly cookie
-    const accessTokenCookie = `whop_access_token=${access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`; // 7 days
-    
-    // Create session data for frontend
-    const sessionData = {
-      user_id: userData.id,
-      has_access: hasAccess,
-      username: userData.username || userData.email,
-      avatar_url: userData.avatar_url,
-      timestamp: Date.now()
-    };
-    
-    const sessionToken = Buffer.from(JSON.stringify(sessionData)).toString('base64');
-    const sessionCookie = `whop_session=${sessionToken}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`; // 7 days
-
-    // Determine final redirect URL
-    const finalRedirectUrl = stateData.next && stateData.next !== '/' ? stateData.next : '/home';
-    const redirectUrl = new URL(finalRedirectUrl, baseUrl);
-    
-    // Add success parameters to URL for frontend processing
-    redirectUrl.searchParams.set('auth', 'success');
-    redirectUrl.searchParams.set('user_id', userData.id);
-    redirectUrl.searchParams.set('has_access', hasAccess.toString());
-
-    console.log('Redirecting to:', redirectUrl.toString());
-
-    // Set multiple cookies and redirect
-    res.setHeader('Set-Cookie', [accessTokenCookie, sessionCookie]);
-    res.redirect(redirectUrl.toString());
 
   } catch (error: any) {
     console.error('OAuth callback error:', error);
