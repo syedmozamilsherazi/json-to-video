@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log('Initializing OAuth flow...');
     console.log('Base URL:', baseUrl);
-    console.log('App ID:', process.env.WHOP_APP_ID);
+    console.log('Client ID:', process.env.WHOP_APP_ID || process.env.WHOP_CLIENT_ID);
 
     // Determine the correct redirect URI based on environment
     const isLocalDev = baseUrl.includes('localhost');

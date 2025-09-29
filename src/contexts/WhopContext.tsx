@@ -117,24 +117,39 @@ export const WhopProvider: React.FC<WhopProviderProps> = ({ children }) => {
   };
   
   const login = () => {
-    // Use the proper OAuth initialization endpoint
-    console.log('Starting OAuth flow via initialization endpoint...');
+    console.log('Starting OAuth flow...');
     
-    // Check if we're in production (Vercel) or local development
-    const isProduction = window.location.hostname !== 'localhost';
+    // Get the client ID from environment
+    const clientId = import.meta.env.VITE_WHOP_CLIENT_ID;
     
-    if (isProduction) {
-      // In production, use the API route
-      const initUrl = `/api/oauth-init?next=${encodeURIComponent(window.location.pathname)}`;
-      console.log('Redirecting to OAuth init (production):', initUrl);
-      window.location.href = initUrl;
-    } else {
-      // For local development, call the production OAuth init endpoint
-      // It will handle the redirect URI automatically
-      const initUrl = `https://json-to-video.vercel.app/api/oauth-init?next=${encodeURIComponent('/')}`;
-      console.log('Redirecting to OAuth init (local dev via production):', initUrl);
-      window.location.href = initUrl;
+    if (!clientId) {
+      console.error('VITE_WHOP_CLIENT_ID not configured');
+      alert('OAuth not properly configured. Please contact support.');
+      return;
     }
+    
+    // Generate state for CSRF protection
+    const state = crypto.randomUUID();
+    
+    // Determine redirect URI based on environment
+    const redirectUri = `${window.location.origin}/api/oauth-callback`;
+    
+    // Store state and next URL in sessionStorage for later verification
+    sessionStorage.setItem(`oauth-state-${state}`, window.location.pathname);
+    
+    // Build OAuth URL directly
+    const oauthUrl = new URL('https://whop.com/oauth');
+    oauthUrl.searchParams.set('client_id', clientId);
+    oauthUrl.searchParams.set('response_type', 'code');
+    oauthUrl.searchParams.set('scope', 'read_user');
+    oauthUrl.searchParams.set('state', state);
+    oauthUrl.searchParams.set('redirect_uri', redirectUri);
+    
+    console.log('Redirecting to Whop OAuth:', oauthUrl.toString());
+    console.log('Client ID:', clientId);
+    console.log('Redirect URI:', redirectUri);
+    
+    window.location.href = oauthUrl.toString();
   };
   
   const logout = () => {

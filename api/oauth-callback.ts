@@ -27,6 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   console.log('OAuth callback received:');
   console.log('Code:', code ? 'Present' : 'Missing');
   console.log('State:', state);
+  console.log('Client ID:', process.env.WHOP_CLIENT_ID || process.env.WHOP_APP_ID);
 
   if (!code) {
     console.error('Missing authorization code');
@@ -64,18 +65,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log('Using redirect URI for token exchange:', redirectUri);
 
-    // Exchange the authorization code for access token using Whop SDK
-    const authResponse = await whopApi.oauth.exchangeCode({
-      code: code as string,
-      redirectUri,
+    // Exchange the authorization code for access token manually
+    const clientId = process.env.WHOP_CLIENT_ID || process.env.WHOP_APP_ID;
+    const clientSecret = process.env.WHOP_CLIENT_SECRET;
+    
+    if (!clientId || !clientSecret) {
+      console.error('Missing client credentials');
+      return res.redirect('/?error=missing_credentials');
+    }
+    
+    console.log('Using client ID for token exchange:', clientId);
+    
+    const tokenResponse = await fetch('https://api.whop.com/v1/oauth/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: clientId,
+        client_secret: clientSecret,
+        code: code as string,
+        redirect_uri: redirectUri,
+      }),
     });
 
-    if (!authResponse.ok) {
-      console.error('Token exchange failed:', authResponse.code, authResponse.raw.statusText);
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error('Token exchange failed:', tokenResponse.status, errorText);
       return res.redirect('/?error=code_exchange_failed');
     }
 
-    const { access_token } = authResponse.tokens;
+    const tokenData = await tokenResponse.json();
+    const access_token = tokenData.access_token;
     console.log('Successfully exchanged code for access token');
 
     // Use the WhopSDK to get user information
