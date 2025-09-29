@@ -1,9 +1,40 @@
+import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import { useWhop } from "../contexts/WhopContext";
 import { PaymentButton } from "../components/PaymentButton";
 import Homepage from "./Homepage";
 
 export default function ExperiencePage() {
   const { hasAccess, isCheckingAccess, user, login } = useWhop();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const hasShownNoAccessToast = useRef(false);
+  const prevAccess = useRef<boolean | null>(null);
+
+  // Redirect to generator when access becomes true
+  useEffect(() => {
+    if (!isCheckingAccess && hasAccess) {
+      if (prevAccess.current !== true) {
+        toast({ title: "Access granted", description: "Welcome! Redirecting to the generator..." });
+      }
+      prevAccess.current = true;
+      navigate("/generator", { replace: true });
+    }
+  }, [hasAccess, isCheckingAccess, navigate, toast]);
+
+  // Show a toast when the user does not have access
+  useEffect(() => {
+    if (!isCheckingAccess && !hasAccess && !hasShownNoAccessToast.current) {
+      toast({
+        title: "No access",
+        description: "You don't have access. Please subscribe to continue.",
+        variant: "destructive",
+      });
+      hasShownNoAccessToast.current = true;
+      prevAccess.current = false;
+    }
+  }, [hasAccess, isCheckingAccess, toast]);
 
   if (isCheckingAccess) {
     return (

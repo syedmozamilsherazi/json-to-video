@@ -82,10 +82,10 @@ export default function OAuthCallback() {
           // Clear the OAuth state
           localStorage.removeItem('oauth_state');
 
-          // Redirect to home after a short delay
+          // Redirect to generator after a short delay
           setTimeout(() => {
-            navigate('/', { replace: true });
-          }, 2000);
+            navigate('/generator', { replace: true });
+          }, 1500);
 
         } else {
           setStatus('error');

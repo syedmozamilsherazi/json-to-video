@@ -148,9 +148,10 @@ export const WhopProvider: React.FC<WhopProviderProps> = ({ children }) => {
         const whopSdk = {
           inAppPurchase: async ({ planId }: { planId: string }) => {
             try {
-              // Use the correct Whop checkout URL format
+              // Always return to OAuth init so we can create a session and then land on the generator
               const baseUrl = window.location.origin;
-              const checkoutUrl = `https://whop.com/checkout/${planId}?return_url=${encodeURIComponent(baseUrl)}`;
+              const oauthInitUrl = `${baseUrl}/api/oauth-init?next=${encodeURIComponent('/generator')}`;
+              const checkoutUrl = `https://whop.com/checkout/${planId}?return_url=${encodeURIComponent(oauthInitUrl)}`;
               
               // Redirect directly to Whop checkout (this is the standard flow)
               window.location.href = checkoutUrl;
