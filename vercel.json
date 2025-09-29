@@ -1,4 +1,8 @@
 {
+  "installCommand": "npm ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
   "functions": {
     "api/check-access.ts": {
       "maxDuration": 10
