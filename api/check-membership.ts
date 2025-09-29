@@ -4,7 +4,7 @@ import { WhopServerSdk } from '@whop/api';
 // Hardcoded Whop credentials and access pass product ID
 const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
 const WHOP_APP_ID = 'app_z0Hznij7sCMJGz';
-const ACCESS_PASS_PRODUCT_ID = 'prod_KrJw0U81FLb0Xw'; // Your access pass product ID
+const ACCESS_PASS_PRODUCT_ID = 'prod_iZZC4IzX2mi7v'; // Your access pass product ID
 
 // Initialize Whop SDK
 const whopApi = WhopServerSdk({

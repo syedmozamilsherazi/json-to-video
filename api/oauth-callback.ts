@@ -33,7 +33,7 @@ interface WhopMembershipResponse {
 // Hardcoded Whop credentials - DO NOT use environment variables
 const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
 const WHOP_APP_ID = 'app_z0Hznij7sCMJGz';
-const PRODUCT_ID = 'prod_KrJw0U81FLb0Xw'; // Your access pass product ID
+const PRODUCT_ID = 'prod_iZZC4IzX2mi7v'; // Your access pass product ID
 
 // Initialize Whop SDK with hardcoded credentials
 const whopApi = WhopServerSdk({
@@ -201,8 +201,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let hasAccess: boolean = false;
     
     try {
-      // Use correct query parameters: user_id and product_id with status filter
-      const membershipUrl = `https://api.whop.com/v2/memberships?user_id=${userId}&product_id=${PRODUCT_ID}&status=active`;
+      // Use correct query parameters: user_id and product_id with validity filter (counts trialing as valid)
+      const membershipUrl = `https://api.whop.com/v2/memberships?user_id=${userId}&product_id=${PRODUCT_ID}&valid=true`;
       console.log('Membership API URL:', membershipUrl);
       
       const membershipResponse = await fetch(membershipUrl, {
@@ -210,6 +210,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         headers: {
           'Authorization': `Bearer ${WHOP_API_KEY}`,
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
       });
 

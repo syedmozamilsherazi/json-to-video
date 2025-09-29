@@ -8,6 +8,8 @@ interface SessionData {
   expires_at: number;
 }
 
+const PRODUCT_ID = process.env.WHOP_ACCESS_PASS_ID || process.env.WHOP_PRODUCT_ID || 'prod_iZZC4IzX2mi7v';
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -77,15 +79,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       let hasAccess = false;
-      let memberships = [];
+      let memberships = [] as any[];
 
       if (membershipsResponse.ok) {
         const membershipsData = await membershipsResponse.json();
         memberships = membershipsData.data || [];
         console.log('Memberships found:', memberships.length);
         
-        hasAccess = memberships.some((membership: any) => 
-          membership.status === 'active' || membership.status === 'trialing'
+        const matchesProduct = (m: any) => {
+          const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
+          return !PRODUCT_ID || pid === PRODUCT_ID;
+        };
+        
+        hasAccess = memberships.some((m: any) => 
+          (m.status === 'active' || m.status === 'trialing') && matchesProduct(m)
         );
       } else {
         console.warn('Failed to fetch memberships');
@@ -127,14 +134,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           });
 
           let hasAccess = false;
-          let memberships = [];
+          let memberships = [] as any[];
 
           if (membershipsCheck.ok) {
             const membershipsData = await membershipsCheck.json();
             memberships = membershipsData.data || [];
             
-            hasAccess = memberships.some((membership: any) => 
-              membership.status === 'active' || membership.status === 'trialing'
+            const matchesProduct = (m: any) => {
+              const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
+              return !PRODUCT_ID || pid === PRODUCT_ID;
+            };
+            
+            hasAccess = memberships.some((m: any) => 
+              (m.status === 'active' || m.status === 'trialing') && matchesProduct(m)
             );
           }
 
