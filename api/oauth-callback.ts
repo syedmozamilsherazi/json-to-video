@@ -103,7 +103,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log('Using redirect URI for token exchange:', redirectUri);
 
-    // Exchange the authorization code for access token using Whop SDK
+    // Exchange the authorization code for access token using app client
+    console.log('Exchanging authorization code for access token...');
     const authResponse = await whopApi.oauth.exchangeCode({
       code: code as string,
       redirectUri,
@@ -117,24 +118,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { access_token } = authResponse.tokens;
     console.log('Successfully exchanged code for access token');
 
-    // Create user client with access token
+    // Create user client with access token for user data retrieval
     const userClient = WhopServerSdk({
       accessToken: access_token,
-      appApiKey: WHOP_API_KEY,
-      appId: WHOP_APP_ID,
     });
 
-    // Get user info using the SDK
+    // Get user info using the user client
+    console.log('Fetching current user data...');
     const userResponse = await userClient.users.getCurrentUser();
     
     if (!userResponse.ok) {
       console.error('Failed to get user info:', userResponse.code, userResponse.raw?.statusText);
+      console.error('Response data:', userResponse.data);
       return res.redirect('/oauth/error?error=failed_to_get_user');
     }
 
-    const userData = userResponse.data;
+    // Parse user data correctly - getCurrentUser returns { user: { ... } }
+    const userData = userResponse.data.user;
     const userId = userData.id;
-    console.log('Got user data:', userId);
+    console.log('Successfully retrieved user ID:', userId);
+    console.log('User email:', userData.email);
+    console.log('User username:', userData.username);
 
     // Check membership status using server-side API call (not storing OAuth token)
     try {
