@@ -1,9 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { WhopServerSdk } from "@whop/api";
+import { WhopServerSdk } from '@whop/api';
 
+// Initialize Whop SDK with environment variables
 const whopApi = WhopServerSdk({
   appApiKey: process.env.WHOP_API_KEY!,
-  appId: process.env.WHOP_APP_ID!,
+  appId: process.env.VITE_PUBLIC_WHOP_APP_ID || process.env.WHOP_APP_ID!,
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -23,46 +24,62 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { next = "/" } = req.query;
+    // Extract optional next parameter for post-login redirect
+    const { next = '/home' } = req.query;
+    
+    // Determine base URL based on environment
     const baseUrl = process.env.NODE_ENV === 'production' 
       ? `https://${req.headers.host}` 
       : 'http://localhost:3000';
 
     console.log('Initializing OAuth flow...');
     console.log('Base URL:', baseUrl);
-    console.log('Client ID:', process.env.WHOP_APP_ID || process.env.WHOP_CLIENT_ID);
+    console.log('App ID:', process.env.VITE_PUBLIC_WHOP_APP_ID || process.env.WHOP_APP_ID);
+    console.log('Next URL:', next);
 
     // Determine the correct redirect URI based on environment
-    const isLocalDev = baseUrl.includes('localhost');
-    const redirectUri = isLocalDev 
-      ? 'http://localhost:8080/oauth/callback'  // Local development callback
-      : `${baseUrl}/api/oauth-callback`;        // Production Vercel callback
+    let redirectUri: string;
+    
+    if (baseUrl.includes('localhost')) {
+      // Local development callback
+      redirectUri = 'http://localhost:8080/oauth/callback';
+    } else if (req.headers.host?.includes('json-to-video.vercel.app')) {
+      // Production Vercel callback
+      redirectUri = 'https://json-to-video.vercel.app/api/oauth-callback';
+    } else {
+      // Fallback to current host callback
+      redirectUri = `${baseUrl}/api/oauth-callback`;
+    }
 
     console.log('Using redirect URI:', redirectUri);
 
+    // Generate authorization URL using Whop SDK (do NOT hardcode the URL)
     const { url, state } = whopApi.oauth.getAuthorizationUrl({
-      // This has to match the redirect URI configured in Whop Dashboard
       redirectUri,
-      // Authorization scopes - using the ones we need
-      scope: ["read_user"] as any,
+      scope: ['read_user'] as any, // Cast to avoid TypeScript issues
     });
 
-    console.log('OAuth Authorization URL:', url);
+    console.log('Generated OAuth URL:', url);
     console.log('OAuth State:', state);
 
-    // Store state securely in a cookie for CSRF protection
-    const stateValue = encodeURIComponent(next as string);
-    const cookieValue = `oauth-state.${state}=${stateValue}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`;
+    // Store state and next URL in a secure HttpOnly cookie
+    const stateData = {
+      next: next as string,
+      timestamp: Date.now()
+    };
+    
+    const encodedStateData = Buffer.from(JSON.stringify(stateData)).toString('base64');
+    const cookieValue = `oauth-state-${state}=${encodedStateData}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`;
 
-    // Redirect to Whop's OAuth authorization page
+    // Set cookie and redirect to Whop OAuth
     res.setHeader('Set-Cookie', cookieValue);
     res.redirect(url);
 
   } catch (error: any) {
     console.error('OAuth initialization error:', error);
-    res.status(500).json({ 
-      error: 'Failed to initialize OAuth flow',
-      details: error.message 
-    });
+    
+    // Redirect to error page instead of returning JSON
+    const errorUrl = `/oauth/error?error=init_failed&details=${encodeURIComponent(error.message)}`;
+    res.redirect(errorUrl);
   }
 }

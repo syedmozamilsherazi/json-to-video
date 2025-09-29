@@ -117,39 +117,18 @@ export const WhopProvider: React.FC<WhopProviderProps> = ({ children }) => {
   };
   
   const login = () => {
-    console.log('Starting OAuth flow...');
+    console.log('Starting OAuth flow via backend initialization...');
     
-    // Get the client ID from environment
-    const clientId = import.meta.env.VITE_WHOP_CLIENT_ID;
+    // Use the backend OAuth initialization endpoint
+    // This ensures proper SDK integration and state management
+    const currentPath = window.location.pathname;
+    const initUrl = `/api/oauth-init?next=${encodeURIComponent(currentPath)}`;
     
-    if (!clientId) {
-      console.error('VITE_WHOP_CLIENT_ID not configured');
-      alert('OAuth not properly configured. Please contact support.');
-      return;
-    }
+    console.log('Redirecting to OAuth init endpoint:', initUrl);
+    console.log('Current path for post-login redirect:', currentPath);
     
-    // Generate state for CSRF protection
-    const state = crypto.randomUUID();
-    
-    // Determine redirect URI based on environment
-    const redirectUri = `${window.location.origin}/api/oauth-callback`;
-    
-    // Store state and next URL in sessionStorage for later verification
-    sessionStorage.setItem(`oauth-state-${state}`, window.location.pathname);
-    
-    // Build OAuth URL directly
-    const oauthUrl = new URL('https://whop.com/oauth');
-    oauthUrl.searchParams.set('client_id', clientId);
-    oauthUrl.searchParams.set('response_type', 'code');
-    oauthUrl.searchParams.set('scope', 'read_user');
-    oauthUrl.searchParams.set('state', state);
-    oauthUrl.searchParams.set('redirect_uri', redirectUri);
-    
-    console.log('Redirecting to Whop OAuth:', oauthUrl.toString());
-    console.log('Client ID:', clientId);
-    console.log('Redirect URI:', redirectUri);
-    
-    window.location.href = oauthUrl.toString();
+    // Redirect to the backend OAuth initialization
+    window.location.href = initUrl;
   };
   
   const logout = () => {
