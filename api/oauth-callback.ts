@@ -4,6 +4,7 @@ import { WhopServerSdk } from '@whop/api';
 // Hardcoded Whop credentials - DO NOT use environment variables
 const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
 const WHOP_APP_ID = 'app_z0Hznij7sCMJGz';
+const PRODUCT_ID = 'prod_KrJw0U81FLb0Xw'; // Your access pass product ID
 
 // Initialize Whop SDK with hardcoded credentials
 const whopApi = WhopServerSdk({
@@ -118,84 +119,85 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { access_token } = authResponse.tokens;
     console.log('Successfully exchanged code for access token');
 
-    // Create user client with access token for user data retrieval
-    const userClient = WhopServerSdk({
-      accessToken: access_token,
-    });
-
-    // Get user info using the user client
+    // Get user info using direct API call with access token
     console.log('Fetching current user data...');
-    const userResponse = await userClient.users.getCurrentUser();
+    const userResponse = await fetch('https://api.whop.com/v2/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${access_token}`,
+        'Content-Type': 'application/json',
+      },
+    });
     
     if (!userResponse.ok) {
-      console.error('Failed to get user info:', userResponse.code, userResponse.raw?.statusText);
-      console.error('Response data:', userResponse.data);
+      const errorText = await userResponse.text();
+      console.error('Failed to get user info:', userResponse.status, errorText);
       return res.redirect('/oauth/error?error=failed_to_get_user');
     }
 
-    // Parse user data correctly - getCurrentUser returns { user: { ... } }
-    const userData = userResponse.data.user;
+    const userResponseData = await userResponse.json();
+    const userData = userResponseData.user;
     const userId = userData.id;
     console.log('Successfully retrieved user ID:', userId);
     console.log('User email:', userData.email);
     console.log('User username:', userData.username);
 
-    // Check membership status using server-side API call (not storing OAuth token)
+    // Check membership status using direct Whop API call
+    console.log('Checking membership for product ID:', PRODUCT_ID);
+    let hasAccess = false;
+    
     try {
-      const membershipResponse = await fetch(`${baseUrl}/api/check-membership`, {
-        method: 'POST',
+      const membershipResponse = await fetch(`https://api.whop.com/v2/memberships?user=${userId}&product=${PRODUCT_ID}`, {
+        method: 'GET',
         headers: {
+          'Authorization': `Bearer ${WHOP_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ user_id: userId }),
       });
 
-      let hasAccess = false;
       if (membershipResponse.ok) {
         const membershipData = await membershipResponse.json();
-        hasAccess = membershipData.hasAccess;
+        console.log('Membership API response:', JSON.stringify(membershipData, null, 2));
+        
+        // Check if user has any active or trialing memberships for this product
+        hasAccess = membershipData.data && membershipData.data.length > 0 
+          ? membershipData.data.some((membership: any) => 
+              (membership.status === 'active' || membership.status === 'trialing') &&
+              membership.product === PRODUCT_ID
+            )
+          : false;
+        
         console.log('Membership check result:', hasAccess);
       } else {
-        console.warn('Failed to check membership, defaulting to no access');
+        const errorText = await membershipResponse.text();
+        console.warn('Failed to check membership:', membershipResponse.status, errorText);
         hasAccess = false;
       }
-
-      // Set secure HttpOnly cookies for user ID and access status (cross-device)
-      const userIdCookie = `whop_user_id=${userId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`; // 30 days
-      const accessCookie = `whop_has_access=${hasAccess}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`; // 30 days
-      const loginStatusCookie = `whop_logged_in=true; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`; // 30 days
-
-      // Determine final redirect URL
-      const finalRedirectUrl = stateData.next && stateData.next !== '/' ? stateData.next : '/home';
-      const redirectUrl = new URL(finalRedirectUrl, baseUrl);
-      
-      // Add success parameters to URL for frontend processing
-      redirectUrl.searchParams.set('auth', 'success');
-      redirectUrl.searchParams.set('user_id', userId);
-      redirectUrl.searchParams.set('has_access', hasAccess.toString());
-
-      console.log('Redirecting to:', redirectUrl.toString());
-
-      // Set cookies and redirect (no OAuth token stored on frontend)
-      res.setHeader('Set-Cookie', [userIdCookie, accessCookie, loginStatusCookie]);
-      res.redirect(redirectUrl.toString());
-
     } catch (membershipError) {
-      console.error('Error checking membership:', membershipError);
-      // Still proceed with login but without access
-      const userIdCookie = `whop_user_id=${userId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`;
-      const accessCookie = `whop_has_access=false; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`;
-      const loginStatusCookie = `whop_logged_in=true; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`;
-      
-      const finalRedirectUrl = stateData.next && stateData.next !== '/' ? stateData.next : '/home';
-      const redirectUrl = new URL(finalRedirectUrl, baseUrl);
-      redirectUrl.searchParams.set('auth', 'success');
-      redirectUrl.searchParams.set('user_id', userId);
-      redirectUrl.searchParams.set('has_access', 'false');
-      
-      res.setHeader('Set-Cookie', [userIdCookie, accessCookie, loginStatusCookie]);
-      res.redirect(redirectUrl.toString());
+      console.error('Error during membership check:', membershipError);
+      hasAccess = false;
     }
+
+    // Set secure HttpOnly cookies for user ID and access status (cross-device)
+    const userIdCookie = `whop_user_id=${userId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`; // 30 days
+    const accessCookie = `whop_has_access=${hasAccess}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`; // 30 days
+    const loginStatusCookie = `whop_logged_in=true; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`; // 30 days
+
+    // Determine final redirect URL
+    const finalRedirectUrl = stateData.next && stateData.next !== '/' ? stateData.next : '/home';
+    const redirectUrl = new URL(finalRedirectUrl, baseUrl);
+    
+    // Add success parameters to URL for frontend processing
+    redirectUrl.searchParams.set('auth', 'success');
+    redirectUrl.searchParams.set('user_id', userId);
+    redirectUrl.searchParams.set('has_access', hasAccess.toString());
+
+    console.log('Redirecting to:', redirectUrl.toString());
+    console.log('Final access status:', hasAccess);
+
+    // Set cookies and redirect (OAuth tokens kept server-side only)
+    res.setHeader('Set-Cookie', [userIdCookie, accessCookie, loginStatusCookie]);
+    res.redirect(redirectUrl.toString());
 
   } catch (error: any) {
     console.error('OAuth callback error:', error);
