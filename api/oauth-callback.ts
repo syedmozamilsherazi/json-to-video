@@ -1,6 +1,35 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { WhopServerSdk } from '@whop/api';
 
+// TypeScript interfaces for API responses
+interface WhopUser {
+  id: string;
+  email?: string;
+  username?: string;
+  [key: string]: any;
+}
+
+interface WhopUserResponse {
+  user?: WhopUser;
+  id?: string;
+  email?: string;
+  username?: string;
+  [key: string]: any;
+}
+
+interface WhopMembership {
+  id: string;
+  status: string;
+  product: string;
+  user: string;
+  [key: string]: any;
+}
+
+interface WhopMembershipResponse {
+  data: WhopMembership[];
+  [key: string]: any;
+}
+
 // Hardcoded Whop credentials - DO NOT use environment variables
 const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
 const WHOP_APP_ID = 'app_z0Hznij7sCMJGz';
@@ -119,8 +148,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { access_token } = authResponse.tokens;
     console.log('Successfully exchanged code for access token');
 
-    // Get user info using correct Whop API endpoint with access token
-    console.log('Fetching current user data...');
+    // Get user info using Whop REST API directly
+    console.log('Fetching current user data with access token...');
     const userResponse = await fetch('https://api.whop.com/v2/users/me', {
       method: 'GET',
       headers: {
@@ -131,26 +160,51 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     if (!userResponse.ok) {
       const errorText = await userResponse.text();
-      console.error('Failed to get user info:', userResponse.status, errorText);
+      console.error('Failed to get user info:', userResponse.status, userResponse.statusText);
+      console.error('Error response body:', errorText);
       return res.redirect('/oauth/error?error=failed_to_get_user');
     }
 
-    const userResponseData = await userResponse.json();
-    console.log('Raw user response:', JSON.stringify(userResponseData, null, 2));
+    let userResponseData: WhopUserResponse;
+    try {
+      userResponseData = await userResponse.json() as WhopUserResponse;
+      console.log('Raw user response:', JSON.stringify(userResponseData, null, 2));
+    } catch (parseError) {
+      console.error('Failed to parse user response JSON:', parseError);
+      return res.redirect('/oauth/error?error=failed_to_parse_user_data');
+    }
     
-    // Parse user data correctly - response.user.id format
-    const userData = userResponseData.user;
-    const userId = userData.id;
+    // Extract user_id from response - handle different possible response structures
+    let userId: string;
+    let userData: WhopUser;
+    
+    if (userResponseData.user) {
+      // Structure: { user: { id, email, ... } }
+      userData = userResponseData.user;
+      userId = userData.id;
+    } else if (userResponseData.id) {
+      // Structure: { id, email, ... }
+      userData = userResponseData;
+      userId = userData.id;
+    } else {
+      console.error('Could not find user ID in response:', userResponseData);
+      return res.redirect('/oauth/error?error=no_user_id_found');
+    }
+    
     console.log('Successfully retrieved user ID:', userId);
-    console.log('User email:', userData.email);
-    console.log('User username:', userData.username);
+    console.log('User email:', userData.email || 'N/A');
+    console.log('User username:', userData.username || 'N/A');
 
-    // Check membership status using direct Whop API call
-    console.log('Checking membership for product ID:', PRODUCT_ID);
-    let hasAccess = false;
+    // Check membership status using server-side WHOP_API_KEY
+    console.log('Checking membership for user:', userId, 'product:', PRODUCT_ID);
+    let hasAccess: boolean = false;
     
     try {
-      const membershipResponse = await fetch(`https://api.whop.com/v2/memberships?user=${userId}&product=${PRODUCT_ID}`, {
+      // Use correct query parameters: user_id and product_id with status filter
+      const membershipUrl = `https://api.whop.com/v2/memberships?user_id=${userId}&product_id=${PRODUCT_ID}&status=active`;
+      console.log('Membership API URL:', membershipUrl);
+      
+      const membershipResponse = await fetch(membershipUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${WHOP_API_KEY}`,
@@ -159,21 +213,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
       if (membershipResponse.ok) {
-        const membershipData = await membershipResponse.json();
+        const membershipData = await membershipResponse.json() as WhopMembershipResponse;
         console.log('Membership API response:', JSON.stringify(membershipData, null, 2));
         
-        // Check if user has any active or trialing memberships for this product
-        hasAccess = membershipData.data && membershipData.data.length > 0 
-          ? membershipData.data.some((membership: any) => 
-              (membership.status === 'active' || membership.status === 'trialing') &&
-              membership.product === PRODUCT_ID
-            )
-          : false;
+        // Check if user has any active memberships for this product
+        if (membershipData.data && Array.isArray(membershipData.data)) {
+          hasAccess = membershipData.data.length > 0;
+          console.log(`Found ${membershipData.data.length} active memberships`);
+        } else {
+          hasAccess = false;
+          console.log('No membership data found or invalid format');
+        }
         
-        console.log('Membership check result:', hasAccess);
+        console.log('Final membership check result:', hasAccess);
       } else {
         const errorText = await membershipResponse.text();
-        console.warn('Failed to check membership:', membershipResponse.status, errorText);
+        console.warn('Failed to check membership:', membershipResponse.status, membershipResponse.statusText);
+        console.warn('Error response body:', errorText);
         hasAccess = false;
       }
     } catch (membershipError) {
