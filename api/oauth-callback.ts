@@ -148,19 +148,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { access_token } = authResponse.tokens;
     console.log('Successfully exchanged code for access token');
 
-    // Get user info using Whop REST API directly
-    console.log('Fetching current user data with access token...');
-    const userResponse = await fetch('https://api.whop.com/v2/users/me', {
+    // Get user info using Whop REST API (v5) with the user's access token
+    console.log('Fetching current user data with access token (v5)...');
+    const userResponse = await fetch('https://api.whop.com/v5/me', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${access_token}`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
     });
     
     if (!userResponse.ok) {
       const errorText = await userResponse.text();
-      console.error('Failed to get user info:', userResponse.status, userResponse.statusText);
+      console.error('Failed to get user info (v5/me):', userResponse.status, userResponse.statusText);
       console.error('Error response body:', errorText);
       return res.redirect('/oauth/error?error=failed_to_get_user');
     }
