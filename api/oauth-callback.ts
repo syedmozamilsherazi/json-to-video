@@ -119,9 +119,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { access_token } = authResponse.tokens;
     console.log('Successfully exchanged code for access token');
 
-    // Get user info using direct API call with access token
+    // Get user info using correct Whop API endpoint with access token
     console.log('Fetching current user data...');
-    const userResponse = await fetch('https://api.whop.com/v2/me', {
+    const userResponse = await fetch('https://api.whop.com/v2/users/me', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${access_token}`,
@@ -136,6 +136,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const userResponseData = await userResponse.json();
+    console.log('Raw user response:', JSON.stringify(userResponseData, null, 2));
+    
+    // Parse user data correctly - response.user.id format
     const userData = userResponseData.user;
     const userId = userData.id;
     console.log('Successfully retrieved user ID:', userId);
