@@ -44,7 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // This has to match the redirect URI configured in Whop Dashboard
       redirectUri,
       // Authorization scopes - using the ones we need
-      scope: ["read_user", "read_memberships"],
+      scope: ["read_user"] as any,
     });
 
     console.log('OAuth Authorization URL:', url);

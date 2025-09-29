@@ -71,25 +71,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (!authResponse.ok) {
-      console.error('Token exchange failed:', authResponse.error);
+      console.error('Token exchange failed:', authResponse.code, authResponse.raw.statusText);
       return res.redirect('/?error=code_exchange_failed');
     }
 
-    const { access_token, refresh_token } = authResponse.tokens;
+    const { access_token } = authResponse.tokens;
     console.log('Successfully exchanged code for access token');
 
     // Use the WhopSDK to get user information
     const userClient = WhopServerSdk({
-      userAccessToken: access_token,
+      accessToken: access_token,
       appApiKey: process.env.WHOP_API_KEY!,
       appId: process.env.WHOP_APP_ID!,
     });
 
     // Get user info using the SDK
-    const userResponse = await userClient.users.me();
+    const userResponse = await userClient.users.getCurrentUser();
     
     if (!userResponse.ok) {
-      console.error('Failed to get user info:', userResponse.error);
+      console.error('Failed to get user info:', userResponse.code, userResponse.raw.statusText);
       return res.redirect('/?error=failed_to_get_user');
     }
 
@@ -97,7 +97,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('Got user data:', userData.id);
 
     // Check user's memberships using the SDK
-    const membershipsResponse = await userClient.users.listMemberships();
+    const membershipsResponse = await userClient.users.getMemberships();
     
     let hasAccess = false;
     if (membershipsResponse.ok) {
@@ -111,13 +111,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       console.log('User has access:', hasAccess);
     } else {
-      console.warn('Failed to fetch memberships:', membershipsResponse.error);
+      console.warn('Failed to fetch memberships:', membershipsResponse.code, membershipsResponse.raw.statusText);
     }
 
     // Create a secure session token
     const sessionToken = Buffer.from(JSON.stringify({
       access_token,
-      refresh_token,
       user_id: userData.id,
       expires_at: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
     })).toString('base64');
