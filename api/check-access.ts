@@ -35,17 +35,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    // For testing purposes, allow a simple test token
-    if (token === 'test-token') {
-      return res.status(200).json({ 
-        hasAccess: true,
-        message: 'Test access granted',
-        user: {
-          id: 'test-user',
-          email: 'test@example.com'
-        }
-      });
-    }
 
     try {
       // Try to decode as session token first

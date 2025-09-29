@@ -119,8 +119,16 @@ export const WhopProvider: React.FC<WhopProviderProps> = ({ children }) => {
   const login = () => {
     // Redirect to Whop OAuth login
     const baseUrl = window.location.origin;
-    const whopAppId = import.meta.env.VITE_WHOP_APP_ID || 'your_whop_app_id';
-    const authUrl = `https://api.whop.com/v5/oauth/authorize?client_id=${whopAppId}&response_type=code&redirect_uri=${encodeURIComponent(baseUrl + '/auth/callback')}&scope=user:read+subscriptions:read`;
+    const whopAppId = import.meta.env.VITE_PUBLIC_WHOP_APP_ID;
+    
+    if (!whopAppId) {
+      console.error('VITE_PUBLIC_WHOP_APP_ID not found in environment variables');
+      alert('OAuth configuration error. Please check environment variables.');
+      return;
+    }
+    
+    const authUrl = `https://api.whop.com/v5/oauth/authorize?client_id=${whopAppId}&response_type=code&redirect_uri=${encodeURIComponent(baseUrl + '/api/auth/callback')}&scope=user:read+subscriptions:read`;
+    console.log('Redirecting to OAuth URL:', authUrl);
     window.location.href = authUrl;
   };
   

@@ -74,7 +74,7 @@ function UpsellScreen({ onLogin }: UpsellScreenProps) {
           Don't have a subscription yet?
         </p>
         
-        <PaymentButton planId={import.meta.env.VITE_WHOP_MONTHLY_PLAN_ID!} displayText="Subscribe Now" />
+        <PaymentButton displayText="Subscribe Now" />
       </div>
       
       <p className="text-xs text-[#6B6F76] pt-2 border-t border-gray-100">
