@@ -8,6 +8,7 @@ import { ApiKeyProvider } from "@/contexts/ApiKeyContext";
 import { WhopProvider } from "@/contexts/WhopContext";
 import Index from "./pages/Index";
 import ExperiencePage from "./pages/ExperiencePage";
+import OAuthCallback from "./pages/OAuthCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<ExperiencePage />} />
                 <Route path="/generator" element={<Index />} />
+                <Route path="/oauth/callback" element={<OAuthCallback />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

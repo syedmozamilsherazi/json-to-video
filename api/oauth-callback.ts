@@ -56,10 +56,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log('Exchanging code for access token...');
 
+    // Determine the correct redirect URI based on environment (must match what was used in init)
+    const isLocalDev = baseUrl.includes('localhost');
+    const redirectUri = isLocalDev 
+      ? 'http://localhost:8080/oauth/callback'  // Local development callback
+      : `${baseUrl}/api/oauth-callback`;        // Production Vercel callback
+
+    console.log('Using redirect URI for token exchange:', redirectUri);
+
     // Exchange the authorization code for access token using Whop SDK
     const authResponse = await whopApi.oauth.exchangeCode({
       code: code as string,
-      redirectUri: `${baseUrl}/api/oauth-callback`,
+      redirectUri,
     });
 
     if (!authResponse.ok) {

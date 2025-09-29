@@ -32,9 +32,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('Base URL:', baseUrl);
     console.log('App ID:', process.env.WHOP_APP_ID);
 
+    // Determine the correct redirect URI based on environment
+    const isLocalDev = baseUrl.includes('localhost');
+    const redirectUri = isLocalDev 
+      ? 'http://localhost:8080/oauth/callback'  // Local development callback
+      : `${baseUrl}/api/oauth-callback`;        // Production Vercel callback
+
+    console.log('Using redirect URI:', redirectUri);
+
     const { url, state } = whopApi.oauth.getAuthorizationUrl({
       // This has to match the redirect URI configured in Whop Dashboard
-      redirectUri: `${baseUrl}/api/oauth-callback`,
+      redirectUri,
       // Authorization scopes - using the ones we need
       scope: ["read_user", "read_memberships"],
     });
