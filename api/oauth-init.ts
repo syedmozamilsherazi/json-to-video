@@ -1,10 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { WhopServerSdk } from '@whop/api';
 
-// Initialize Whop SDK with environment variables
+// Hardcoded Whop credentials - DO NOT use environment variables
+const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
+const WHOP_APP_ID = 'app_z0Hznij7sCMJGz';
+
+// Initialize Whop SDK with hardcoded credentials
 const whopApi = WhopServerSdk({
-  appApiKey: process.env.WHOP_API_KEY!,
-  appId: process.env.VITE_PUBLIC_WHOP_APP_ID || process.env.WHOP_APP_ID!,
+  appApiKey: WHOP_API_KEY,
+  appId: WHOP_APP_ID,
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -28,13 +32,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { next = '/home' } = req.query;
     
     // Determine base URL based on environment
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://${req.headers.host}` 
-      : 'http://localhost:3000';
+    const baseUrl = req.headers.host?.includes('localhost') 
+      ? 'http://localhost:3000'
+      : `https://${req.headers.host}`;
 
     console.log('Initializing OAuth flow...');
     console.log('Base URL:', baseUrl);
-    console.log('App ID:', process.env.VITE_PUBLIC_WHOP_APP_ID || process.env.WHOP_APP_ID);
+    console.log('App ID:', WHOP_APP_ID);
     console.log('Next URL:', next);
 
     // Determine the correct redirect URI based on environment
