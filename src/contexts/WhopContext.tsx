@@ -117,19 +117,14 @@ export const WhopProvider: React.FC<WhopProviderProps> = ({ children }) => {
   };
   
   const login = () => {
-    // Redirect to Whop OAuth login
-    const baseUrl = window.location.origin;
-    const whopAppId = import.meta.env.VITE_PUBLIC_WHOP_APP_ID;
+    // Use the proper OAuth initialization endpoint
+    console.log('Starting OAuth flow via initialization endpoint...');
     
-    if (!whopAppId) {
-      console.error('VITE_PUBLIC_WHOP_APP_ID not found in environment variables');
-      alert('OAuth configuration error. Please check environment variables.');
-      return;
-    }
+    // Redirect to our OAuth initialization route which uses the Whop SDK
+    const initUrl = `/api/oauth/init?next=${encodeURIComponent(window.location.pathname)}`;
     
-    const authUrl = `https://api.whop.com/v5/oauth/authorize?client_id=${whopAppId}&response_type=code&redirect_uri=${encodeURIComponent(baseUrl + '/api/auth/callback')}&scope=user:read+subscriptions:read`;
-    console.log('Redirecting to OAuth URL:', authUrl);
-    window.location.href = authUrl;
+    console.log('Redirecting to OAuth init:', initUrl);
+    window.location.href = initUrl;
   };
   
   const logout = () => {
