@@ -6,7 +6,7 @@ const whopApi = WhopServerSdk({
   appId: 'app_z0Hznij7sCMJGz',
 });
 
-export const config = { runtime: 'nodejs20.x' };
+export const config = { runtime: 'nodejs' };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
@@ -57,52 +57,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (!authResponse.ok) {
-      console.error('Token exchange failed:', authResponse.error);
+      const body = authResponse.raw ? await authResponse.raw.text() : '';
+      console.error('Token exchange failed:', authResponse.code, body);
       return res.redirect('/?error=code_exchange_failed');
     }
 
-    const { access_token, refresh_token } = authResponse.tokens;
+    const { access_token } = authResponse.tokens;
     console.log('Successfully exchanged code for access token');
 
-    // Use the WhopSDK to get user information
-    const userClient = WhopServerSdk({
-      userAccessToken: access_token,
-      appApiKey: process.env.WHOP_API_KEY!,
-      appId: process.env.WHOP_APP_ID!,
+    // Fetch user via Whop v5
+    const userRes = await fetch('https://api.whop.com/v5/me', {
+      headers: { 'Authorization': `Bearer ${access_token}`, 'Accept': 'application/json' }
     });
-
-    // Get user info using the SDK
-    const userResponse = await userClient.users.me();
-    
-    if (!userResponse.ok) {
-      console.error('Failed to get user info:', userResponse.error);
+    if (!userRes.ok) {
+      const body = await userRes.text();
+      console.error('Failed to get user info:', userRes.status, body);
       return res.redirect('/?error=failed_to_get_user');
     }
+    const userData = await userRes.json() as any;
 
-    const userData = userResponse.data;
-    console.log('Got user data:', userData.id);
-
-    // Check user's memberships using the SDK, restricted to the correct product
-    const membershipsResponse = await userClient.users.listMemberships();
+    // Fetch memberships via v5
+    const memRes = await fetch('https://api.whop.com/v5/me/memberships', {
+      headers: { 'Authorization': `Bearer ${access_token}`, 'Accept': 'application/json' }
+    });
     let hasAccess = false;
-    if (membershipsResponse.ok) {
-      const memberships = membershipsResponse.data;
-      console.log('Found memberships:', memberships.length);
-      hasAccess = memberships.some((membership: any) => {
-        const productId = (membership.product && typeof membership.product === 'object') ? membership.product.id : membership.product_id || membership.product;
-        return (membership.status === 'active' || membership.status === 'trialing') && productId === 'prod_iZZC4IzX2mi7v';
+    if (memRes.ok) {
+      const data = await memRes.json() as any;
+      const memberships: any[] = data.data || [];
+      hasAccess = memberships.some((m: any) => {
+        const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
+        return (m.status === 'active' || m.status === 'trialing') && pid === 'prod_iZZC4IzX2mi7v';
       });
-      console.log('User has access for product prod_iZZC4IzX2mi7v:', hasAccess);
-    } else {
-      console.warn('Failed to fetch memberships:', membershipsResponse.error);
     }
 
     // Create a secure session token
     const sessionToken = Buffer.from(JSON.stringify({
       access_token,
-      refresh_token,
       user_id: userData.id,
-      expires_at: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
+      expires_at: Date.now() + (7 * 24 * 60 * 60 * 1000)
     })).toString('base64');
 
     // Restore the `next` parameter from the state cookie (base64 state data)
