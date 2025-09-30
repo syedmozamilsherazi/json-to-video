@@ -48,9 +48,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('Exchanging code for access token...');
 
     // Exchange the authorization code for access token using Whop SDK
-    const redirectUri = baseUrl.includes('localhost')
-      ? 'http://localhost:8080/oauth/callback'
-      : 'https://json-to-video.vercel.app/api/auth/callback';
+    // Use the same callback route that initiated the flow
+    const redirectUri = `${baseUrl}/api/oauth/callback`;
     const authResponse = await whopApi.oauth.exchangeCode({
       code: code as string,
       redirectUri,

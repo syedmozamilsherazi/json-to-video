@@ -20,9 +20,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('Initializing OAuth flow...');
     console.log('Base URL:', baseUrl);
 
-    const redirectUri = baseUrl.includes('localhost')
-      ? 'http://localhost:8080/oauth/callback'
-      : 'https://json-to-video.vercel.app/api/auth/callback';
+    // Always use our backend callback route path; must match in callback too
+    const redirectUri = `${baseUrl}/api/oauth/callback`;
     const { url, state } = whopApi.oauth.getAuthorizationUrl({
       redirectUri,
       scope: ["read_user"],
