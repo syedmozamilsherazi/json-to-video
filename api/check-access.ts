@@ -88,6 +88,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         
         const matchesProduct = (m: any) => {
           const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
+          console.log(`Checking membership ${m.id}: product_id=${pid} vs expected=${PRODUCT_ID}`);
           return !PRODUCT_ID || pid === PRODUCT_ID;
         };
         
@@ -142,6 +143,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             
             const matchesProduct = (m: any) => {
               const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
+              console.log(`Fallback - checking membership ${m.id}: product_id=${pid} vs expected=${PRODUCT_ID}`);
               return !PRODUCT_ID || pid === PRODUCT_ID;
             };
             

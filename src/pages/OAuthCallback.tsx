@@ -62,17 +62,18 @@ export default function OAuthCallback() {
         const finalUrl = response.url;
         console.log('Final redirect URL:', finalUrl);
 
-        // Parse the URL to get the token and user info
+        // Parse the URL to get auth status and user info from the backend redirect
         const url = new URL(finalUrl);
-        const token = url.searchParams.get('token');
+        const authSuccess = url.searchParams.get('auth');
         const userId = url.searchParams.get('user_id');
         const hasAccess = url.searchParams.get('has_access');
+        
+        // For the new callback system, we get cookies instead of URL params
+        // But we still check URL params for compatibility
 
-        if (token && userId) {
-          // Store the session information locally
-          document.cookie = `whop_session=${token}; path=/; max-age=2592000; SameSite=Strict`;
-          document.cookie = `whop_user_id=${userId}; path=/; max-age=2592000; SameSite=Strict`;
-
+        if (authSuccess === 'success' && userId) {
+          // The backend has already set the necessary cookies
+          // We just need to confirm the authentication worked
           setStatus('success');
           setMessage(hasAccess === 'true' 
             ? '✅ Authentication successful! You have premium access.' 
@@ -82,14 +83,18 @@ export default function OAuthCallback() {
           // Clear the OAuth state
           localStorage.removeItem('oauth_state');
 
-          // Redirect to generator after a short delay
+          // Redirect to the appropriate page based on access
           setTimeout(() => {
-            navigate('/generator', { replace: true });
+            if (hasAccess === 'true') {
+              navigate('/generator', { replace: true });
+            } else {
+              navigate('/home', { replace: true }); // Redirect to subscription page if no access
+            }
           }, 1500);
 
         } else {
           setStatus('error');
-          setMessage('Failed to get authentication token');
+          setMessage('Failed to complete authentication - please try again');
         }
 
       } catch (error: any) {

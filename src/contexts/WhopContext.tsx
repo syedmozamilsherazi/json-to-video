@@ -68,9 +68,22 @@ export const WhopProvider: React.FC<WhopProviderProps> = ({ children }) => {
         window.history.replaceState({}, document.title, cleanUrl);
       }
       
-      // Check for existing session
-      const sessionToken = getCookie('whop_session');
+      // Check for existing session (try different cookie names for compatibility)
+      const sessionToken = getCookie('whop_session') || getCookie('whop_access_token');
       const storedUserId = getCookie('whop_user_id');
+      const hasAccessCookie = getCookie('whop_has_access');
+      const loggedInCookie = getCookie('whop_logged_in');
+      
+      // If we have a logged in cookie but no session token, user might be logged in via new system
+      if (loggedInCookie === 'true' && hasAccessCookie) {
+        console.log('Found new-style authentication cookies');
+        setHasAccess(hasAccessCookie === 'true');
+        if (storedUserId) {
+          setUser({ id: storedUserId });
+        }
+        setIsCheckingAccess(false);
+        return;
+      }
       
       if (sessionToken) {
         // Verify session with backend
@@ -90,9 +103,22 @@ export const WhopProvider: React.FC<WhopProviderProps> = ({ children }) => {
             username: result.user?.username,
             avatar_url: result.user?.avatar_url
           });
-        } else {
-          // Invalid session, clear cookies
+        } else if (result.error === 'Invalid session' || result.expired) {
+          // Only clear session if it's truly invalid, not just lack of access
+          console.log('Session is invalid or expired, clearing cookies');
           clearSession();
+        } else {
+          // User is authenticated but doesn't have access - keep the session but no access
+          console.log('User is authenticated but has no active subscription');
+          setHasAccess(false);
+          if (result.user) {
+            setUser({
+              id: storedUserId || result.user?.id || 'unknown',
+              email: result.user?.email,
+              username: result.user?.username,
+              avatar_url: result.user?.avatar_url
+            });
+          }
         }
       }
     } catch (error) {
@@ -110,8 +136,12 @@ export const WhopProvider: React.FC<WhopProviderProps> = ({ children }) => {
   };
   
   const clearSession = () => {
+    // Clear all possible authentication cookies
     document.cookie = 'whop_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     document.cookie = 'whop_user_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'whop_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'whop_has_access=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'whop_logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     setUser(null);
     setHasAccess(false);
   };
