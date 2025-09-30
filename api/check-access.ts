@@ -8,7 +8,7 @@ interface SessionData {
   expires_at: number;
 }
 
-const PRODUCT_ID = process.env.WHOP_ACCESS_PASS_ID || process.env.WHOP_PRODUCT_ID || 'prod_iZZC4IzX2mi7v';
+const PRODUCT_ID = 'prod_iZZC4IzX2mi7v';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
@@ -30,171 +30,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { token } = req.body;
     console.log('Checking access for token:', token ? 'Token provided' : 'No token');
 
-    if (!token || token === 'null' || token === 'undefined') {
-      return res.status(400).json({ 
-        error: 'No token provided', 
-        hasAccess: false 
+    if (!token) {
+      return res.status(400).json({ error: 'No token provided', hasAccess: false });
+    }
+
+    const sessionData: SessionData = JSON.parse(Buffer.from(token, 'base64').toString('utf-8'));
+    if (Date.now() > sessionData.expires_at) {
+      return res.status(200).json({ hasAccess: false, error: 'Session expired', expired: true });
+    }
+
+    // Verify using v5 API with the user's access token
+    const userResponse = await fetch('https://api.whop.com/v5/me', {
+      headers: { 'Authorization': `Bearer ${sessionData.access_token}`, 'Content-Type': 'application/json' }
+    });
+    if (!userResponse.ok) {
+      return res.status(200).json({ hasAccess: false, error: 'Invalid session' });
+    }
+    const userData = await userResponse.json();
+
+    const membershipsResponse = await fetch('https://api.whop.com/v5/me/memberships', {
+      headers: { 'Authorization': `Bearer ${sessionData.access_token}`, 'Content-Type': 'application/json' }
+    });
+
+    let hasAccess = false;
+    let memberships: any[] = [];
+    if (membershipsResponse.ok) {
+      const membershipsData = await membershipsResponse.json();
+      memberships = membershipsData.data || [];
+      hasAccess = memberships.some((m: any) => {
+        const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
+        return (m.status === 'active' || m.status === 'trialing') && pid === PRODUCT_ID;
       });
     }
 
-
-    try {
-      // Try to decode as session token first
-      const sessionData: SessionData = JSON.parse(Buffer.from(token, 'base64').toString('utf-8'));
-      
-      // Check if session is expired
-      if (Date.now() > sessionData.expires_at) {
-        return res.status(200).json({ 
-          hasAccess: false, 
-          error: 'Session expired',
-          expired: true
-        });
-      }
-
-      // Use the access token to verify with Whop
-      const userResponse = await fetch('https://api.whop.com/v5/me', {
-        headers: {
-          'Authorization': `Bearer ${sessionData.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!userResponse.ok) {
-        console.error('Failed to verify user with Whop API');
-        return res.status(200).json({ 
-          hasAccess: false, 
-          error: 'Invalid session'
-        });
-      }
-
-      const userData = await userResponse.json();
-      console.log('User data retrieved:', userData.id);
-      
-      // Check user's memberships
-      const membershipsResponse = await fetch('https://api.whop.com/v5/me/memberships', {
-        headers: {
-          'Authorization': `Bearer ${sessionData.access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      let hasAccess = false;
-      let memberships = [] as any[];
-
-      if (membershipsResponse.ok) {
-        const membershipsData = await membershipsResponse.json();
-        memberships = membershipsData.data || [];
-        console.log('Memberships found:', memberships.length);
-        
-        const matchesProduct = (m: any) => {
-          const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
-          console.log(`Checking membership ${m.id}: product_id=${pid} vs expected=${PRODUCT_ID}`);
-          return !PRODUCT_ID || pid === PRODUCT_ID;
-        };
-        
-        hasAccess = memberships.some((m: any) => 
-          (m.status === 'active' || m.status === 'trialing') && matchesProduct(m)
-        );
-      } else {
-        console.warn('Failed to fetch memberships');
-      }
-
-      return res.status(200).json({ 
-        hasAccess,
-        user: {
-          id: userData.id,
-          email: userData.email,
-          username: userData.username,
-          avatar_url: userData.avatar_url
-        },
-        memberships
-      });
-
-    } catch (decodeError) {
-      console.log('Failed to decode session token, trying legacy methods');
-      
-      // Fallback 1: Try to use token directly as bearer token
-      try {
-        const userCheck = await fetch('https://api.whop.com/v5/me', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (userCheck.ok) {
-          const userData = await userCheck.json();
-          console.log('User data retrieved via direct token:', userData.id);
-          
-          // Check user's memberships
-          const membershipsCheck = await fetch('https://api.whop.com/v5/me/memberships', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          let hasAccess = false;
-          let memberships = [] as any[];
-
-          if (membershipsCheck.ok) {
-            const membershipsData = await membershipsCheck.json();
-            memberships = membershipsData.data || [];
-            
-            const matchesProduct = (m: any) => {
-              const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
-              console.log(`Fallback - checking membership ${m.id}: product_id=${pid} vs expected=${PRODUCT_ID}`);
-              return !PRODUCT_ID || pid === PRODUCT_ID;
-            };
-            
-            hasAccess = memberships.some((m: any) => 
-              (m.status === 'active' || m.status === 'trialing') && matchesProduct(m)
-            );
-          }
-
-          return res.status(200).json({ 
-            hasAccess,
-            user: {
-              id: userData.id,
-              email: userData.email,
-              username: userData.username,
-              avatar_url: userData.avatar_url
-            },
-            memberships
-          });
-        }
-      } catch (directTokenError) {
-        console.log('Direct token failed, trying SDK method');
-      }
-
-      // Fallback 2: Try using Whop SDK (legacy method)
-      try {
-        const whop = new Whop({
-          apiKey: process.env.WHOP_API_KEY as string,
-        });
-
-        const { user_id } = await whop.auth.verifyUserToken({ token });
-        console.log('User ID verified via SDK:', user_id);
-
-        const result = await whop.access.checkIfUserHasAccessToAccessPass({
-          access_pass_id: process.env.WHOP_ACCESS_PASS_ID as string,
-          user_id,
-        });
-
-        return res.status(200).json({ 
-          hasAccess: result.has_access, 
-          userId: user_id,
-          message: result.has_access ? 'Access granted' : 'No active subscription'
-        });
-      } catch (sdkError: any) {
-        console.error('SDK verification failed:', sdkError.message);
-      }
-    }
-
-    // If we get here, all methods failed
     return res.status(200).json({ 
-      hasAccess: false, 
-      error: 'Invalid token'
+      hasAccess,
+      user: {
+        id: userData.id,
+        email: userData.email,
+        username: userData.username,
+        avatar_url: userData.avatar_url
+      },
+      memberships
     });
 
   } catch (error: any) {

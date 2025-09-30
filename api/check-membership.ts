@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Whop credentials and access pass product ID from environment
-const WHOP_API_KEY = process.env.WHOP_API_KEY as string;
-const ACCESS_PASS_PRODUCT_ID = (process.env.WHOP_ACCESS_PASS_ID || process.env.WHOP_PRODUCT_ID || 'prod_iZZC4IzX2mi7v') as string;
+// Hardcoded Whop API key and product ID per user request
+const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
+const ACCESS_PASS_PRODUCT_ID = 'prod_iZZC4IzX2mi7v';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Add CORS headers

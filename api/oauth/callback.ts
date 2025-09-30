@@ -2,8 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { WhopServerSdk } from "@whop/api";
 
 const whopApi = WhopServerSdk({
-  appApiKey: process.env.WHOP_API_KEY!,
-  appId: process.env.WHOP_APP_ID!,
+  appApiKey: 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws',
+  appId: 'app_z0Hznij7sCMJGz',
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -28,15 +28,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://${req.headers.host}` 
-      : 'http://localhost:3000';
+    const baseUrl = req.headers.host?.includes('localhost')
+      ? 'http://localhost:3000'
+      : `https://${req.headers.host}`;
 
     // Verify state parameter from cookie
     const cookies = req.headers.cookie || '';
     const stateCookie = cookies
       .split(';')
-      .find(cookie => cookie.trim().startsWith(`oauth-state.${state}=`));
+      .find(cookie => cookie.trim().startsWith(`oauth-state-${state}=`));
 
     if (!stateCookie) {
       console.error('Invalid state parameter - no matching cookie found');
@@ -46,9 +46,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('Exchanging code for access token...');
 
     // Exchange the authorization code for access token using Whop SDK
+    const redirectUri = baseUrl.includes('localhost')
+      ? 'http://localhost:8080/oauth/callback'
+      : 'https://json-to-video.vercel.app/api/auth/callback';
     const authResponse = await whopApi.oauth.exchangeCode({
       code: code as string,
-      redirectUri: `${baseUrl}/api/oauth/callback`,
+      redirectUri,
     });
 
     if (!authResponse.ok) {
@@ -77,20 +80,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const userData = userResponse.data;
     console.log('Got user data:', userData.id);
 
-    // Check user's memberships using the SDK
+    // Check user's memberships using the SDK, restricted to the correct product
     const membershipsResponse = await userClient.users.listMemberships();
-    
     let hasAccess = false;
     if (membershipsResponse.ok) {
       const memberships = membershipsResponse.data;
       console.log('Found memberships:', memberships.length);
-      
-      // Check if user has any active memberships
-      hasAccess = memberships.some((membership: any) => 
-        membership.status === 'active' || membership.status === 'trialing'
-      );
-      
-      console.log('User has access:', hasAccess);
+      hasAccess = memberships.some((membership: any) => {
+        const productId = (membership.product && typeof membership.product === 'object') ? membership.product.id : membership.product_id || membership.product;
+        return (membership.status === 'active' || membership.status === 'trialing') && productId === 'prod_iZZC4IzX2mi7v';
+      });
+      console.log('User has access for product prod_iZZC4IzX2mi7v:', hasAccess);
     } else {
       console.warn('Failed to fetch memberships:', membershipsResponse.error);
     }
@@ -103,8 +103,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       expires_at: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
     })).toString('base64');
 
-    // Restore the `next` parameter from the state cookie
-    const next = decodeURIComponent(stateCookie.split('=')[1]);
+    // Restore the `next` parameter from the state cookie (base64 state data)
+    const encoded = stateCookie.split('=')[1];
+    let next = '/';
+    try {
+      const decoded = Buffer.from(encoded, 'base64').toString('utf8');
+      const parsed = JSON.parse(decoded);
+      next = parsed.next || '/';
+    } catch {}
     const nextUrl = new URL(next || '/', baseUrl);
     
     // Add session info to URL for the frontend to capture

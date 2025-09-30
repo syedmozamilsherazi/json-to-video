@@ -14,7 +14,7 @@ export function PaymentButton({ displayText, planId }: PaymentButtonProps) {
   const { refreshAccess } = useWhop();
   
   // Use the plan ID from props or environment variable
-  const actualPlanId = planId || import.meta.env.VITE_WHOP_MONTHLY_PLAN_ID;
+  const actualPlanId = planId || 'plan_0DGjXrTvavvWm';
 
   const handleClick = useCallback(async () => {
     if (!actualPlanId) {

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import oauthHandler from '../oauth-callback';
+import oauthHandler from '../oauth/callback';
 
 // This endpoint exists to match the redirect URI configured in Whop Dashboard:
 // https://json-to-video.vercel.app/api/auth/callback

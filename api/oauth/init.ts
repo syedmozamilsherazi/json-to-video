@@ -2,8 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { WhopServerSdk } from "@whop/api";
 
 const whopApi = WhopServerSdk({
-  appApiKey: process.env.WHOP_API_KEY!,
-  appId: process.env.WHOP_APP_ID!,
+  appApiKey: 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws',
+  appId: 'app_z0Hznij7sCMJGz',
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -13,17 +13,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { next = "/" } = req.query;
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://${req.headers.host}` 
-      : 'http://localhost:3000';
+    const baseUrl = req.headers.host?.includes('localhost')
+      ? 'http://localhost:3000'
+      : `https://${req.headers.host}`;
 
     console.log('Initializing OAuth flow...');
     console.log('Base URL:', baseUrl);
 
+    const redirectUri = baseUrl.includes('localhost')
+      ? 'http://localhost:8080/oauth/callback'
+      : 'https://json-to-video.vercel.app/api/auth/callback';
     const { url, state } = whopApi.oauth.getAuthorizationUrl({
-      // This has to match the redirect URI configured in Whop Dashboard
-      redirectUri: `${baseUrl}/api/oauth/callback`,
-      // Authorization scopes - using the ones we need
+      redirectUri,
       scope: ["read_user", "read_memberships"],
     });
 
@@ -32,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Store state securely in a cookie for CSRF protection
     const stateValue = encodeURIComponent(next as string);
-    const cookieValue = `oauth-state.${state}=${stateValue}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`;
+    const cookieValue = `oauth-state-${state}=${Buffer.from(JSON.stringify({ next: next as string, timestamp: Date.now() })).toString('base64')}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=3600`;
 
     // Redirect to Whop's OAuth authorization page
     res.setHeader('Set-Cookie', cookieValue);

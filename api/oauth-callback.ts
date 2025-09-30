@@ -30,10 +30,10 @@ interface WhopMembershipResponse {
   [key: string]: any;
 }
 
-// Whop credentials and product ID from environment variables
-const WHOP_API_KEY = process.env.WHOP_API_KEY as string;
-const WHOP_APP_ID = process.env.WHOP_APP_ID as string;
-const PRODUCT_ID = (process.env.WHOP_ACCESS_PASS_ID || process.env.WHOP_PRODUCT_ID || 'prod_iZZC4IzX2mi7v') as string; // fallback to provided product id
+// Hardcoded Whop credentials and product ID per user request
+const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
+const WHOP_APP_ID = 'app_z0Hznij7sCMJGz';
+const PRODUCT_ID = 'prod_iZZC4IzX2mi7v';
 
 // Initialize Whop SDK with env-based credentials
 const whopApi = WhopServerSdk({
@@ -118,18 +118,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('Next URL from state:', stateData.next);
 
     // Determine the correct redirect URI (must match what was used in init)
-    let redirectUri: string;
-    
-    if (baseUrl.includes('localhost')) {
-      // Local development callback (registered in Whop)
-      redirectUri = 'http://localhost:8080/oauth/callback';
-    } else if (req.headers.host?.includes('json-to-video.vercel.app')) {
-      // Production callback (registered in Whop)
-      redirectUri = 'https://json-to-video.vercel.app/api/auth/callback';
-    } else {
-      // Fallback to current host callback
-      redirectUri = `${baseUrl}/api/oauth-callback`;
-    }
+    const redirectUri = baseUrl.includes('localhost')
+      ? 'http://localhost:8080/oauth/callback'
+      : 'https://json-to-video.vercel.app/api/auth/callback';
 
     console.log('Using redirect URI for token exchange:', redirectUri);
 

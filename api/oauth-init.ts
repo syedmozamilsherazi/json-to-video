@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { WhopServerSdk } from '@whop/api';
 
-// Read Whop credentials from environment variables (configure in Vercel)
-const WHOP_API_KEY = process.env.WHOP_API_KEY as string;
-const WHOP_APP_ID = process.env.WHOP_APP_ID as string;
+// Hardcoded Whop credentials per user request
+const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
+const WHOP_APP_ID = 'app_z0Hznij7sCMJGz';
 
 // Initialize Whop SDK with env-based credentials
 let whopApi: any;
@@ -35,19 +35,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    // Debug environment variables
-    console.log('Environment variables check:');
-    console.log('WHOP_API_KEY:', WHOP_API_KEY ? 'Set' : 'Missing');
-    console.log('WHOP_APP_ID:', WHOP_APP_ID ? 'Set' : 'Missing');
-    console.log('Process env WHOP_API_KEY:', process.env.WHOP_API_KEY ? 'Set' : 'Missing');
-    console.log('Process env WHOP_APP_ID:', process.env.WHOP_APP_ID ? 'Set' : 'Missing');
-    
-    // Check if required environment variables are missing
+    // Confirm hardcoded credentials are present
     if (!WHOP_API_KEY || !WHOP_APP_ID) {
-      console.error('Missing required environment variables');
-      console.error('WHOP_API_KEY exists:', !!WHOP_API_KEY);
-      console.error('WHOP_APP_ID exists:', !!WHOP_APP_ID);
-      throw new Error('Missing required Whop credentials in environment variables');
+      throw new Error('Missing Whop credentials');
     }
     
     // Check if Whop SDK is properly initialized
@@ -71,24 +61,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Determine the correct redirect URI based on environment
     let redirectUri: string;
-    
     if (baseUrl.includes('localhost')) {
-      // Local development callback (registered in Whop)
       redirectUri = 'http://localhost:8080/oauth/callback';
-    } else if (req.headers.host?.includes('json-to-video.vercel.app')) {
-      // Production callback (registered in Whop)
-      redirectUri = 'https://json-to-video.vercel.app/api/auth/callback';
     } else {
-      // Fallback to current host callback (kept for flexibility)
-      redirectUri = `${baseUrl}/api/oauth-callback`;
+      // Production callback configured in Whop Dashboard
+      redirectUri = 'https://json-to-video.vercel.app/api/auth/callback';
     }
 
     console.log('Using redirect URI:', redirectUri);
 
-    // Generate authorization URL using Whop SDK (do NOT hardcode the URL)
+    // Generate authorization URL using Whop SDK
     const { url, state } = whopApi.oauth.getAuthorizationUrl({
       redirectUri,
-      scope: ['read_user'] as any, // Cast to avoid TypeScript issues
+      scope: ['read_user', 'read_memberships'] as any,
     });
 
     console.log('Generated OAuth URL:', url);
