@@ -55,12 +55,18 @@ export const WhopProvider: React.FC<WhopProviderProps> = ({ children }) => {
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token') || urlParams.get('access_token');
       const userId = urlParams.get('user_id');
+      const hasAccessParam = urlParams.get('has_access');
       
       if (token) {
         // Store the session token in a cookie (cross-device accessible)
         document.cookie = `whop_session=${token}; path=/; max-age=2592000; SameSite=Strict`; // 30 days
         if (userId) {
           document.cookie = `whop_user_id=${userId}; path=/; max-age=2592000; SameSite=Strict`;
+        }
+        if (hasAccessParam) {
+          // Store readable access flag for UI (backend sets HttpOnly cookies we cannot read)
+          document.cookie = `whop_has_access_client=${hasAccessParam}; path=/; max-age=2592000; SameSite=Strict`;
+          document.cookie = `whop_logged_in_client=true; path=/; max-age=2592000; SameSite=Strict`;
         }
         
         // Clean URL
@@ -71,8 +77,8 @@ export const WhopProvider: React.FC<WhopProviderProps> = ({ children }) => {
       // Check for existing session (try different cookie names for compatibility)
       const sessionToken = getCookie('whop_session') || getCookie('whop_access_token');
       const storedUserId = getCookie('whop_user_id');
-      const hasAccessCookie = getCookie('whop_has_access');
-      const loggedInCookie = getCookie('whop_logged_in');
+      const hasAccessCookie = getCookie('whop_has_access_client') || getCookie('whop_has_access');
+      const loggedInCookie = getCookie('whop_logged_in_client') || getCookie('whop_logged_in');
       
       // If we have a logged in cookie but no session token, user might be logged in via new system
       if (loggedInCookie === 'true' && hasAccessCookie) {
