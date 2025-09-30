@@ -6,10 +6,17 @@ const WHOP_API_KEY = process.env.WHOP_API_KEY as string;
 const WHOP_APP_ID = process.env.WHOP_APP_ID as string;
 
 // Initialize Whop SDK with env-based credentials
-const whopApi = WhopServerSdk({
-  appApiKey: WHOP_API_KEY,
-  appId: WHOP_APP_ID,
-});
+let whopApi: any;
+
+try {
+  whopApi = WhopServerSdk({
+    appApiKey: WHOP_API_KEY,
+    appId: WHOP_APP_ID,
+  });
+  console.log('Whop SDK initialized successfully');
+} catch (sdkError: any) {
+  console.error('Failed to initialize Whop SDK:', sdkError.message);
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Add CORS headers
@@ -28,6 +35,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // Debug environment variables
+    console.log('Environment variables check:');
+    console.log('WHOP_API_KEY:', WHOP_API_KEY ? 'Set' : 'Missing');
+    console.log('WHOP_APP_ID:', WHOP_APP_ID ? 'Set' : 'Missing');
+    console.log('Process env WHOP_API_KEY:', process.env.WHOP_API_KEY ? 'Set' : 'Missing');
+    console.log('Process env WHOP_APP_ID:', process.env.WHOP_APP_ID ? 'Set' : 'Missing');
+    
+    // Check if required environment variables are missing
+    if (!WHOP_API_KEY || !WHOP_APP_ID) {
+      console.error('Missing required environment variables');
+      console.error('WHOP_API_KEY exists:', !!WHOP_API_KEY);
+      console.error('WHOP_APP_ID exists:', !!WHOP_APP_ID);
+      throw new Error('Missing required Whop credentials in environment variables');
+    }
+    
+    // Check if Whop SDK is properly initialized
+    if (!whopApi) {
+      console.error('Whop SDK is not initialized');
+      throw new Error('Whop SDK initialization failed');
+    }
+    
     // Extract optional next parameter for post-login redirect
     const { next = '/home' } = req.query;
     
