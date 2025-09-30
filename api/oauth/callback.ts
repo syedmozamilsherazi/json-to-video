@@ -35,8 +35,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : `https://${req.headers.host}`;
 
     // Verify state parameter from cookie
-    const cookies = req.headers.cookie || '';
-    const stateCookie = cookies
+    const cookieHeader = req.headers.cookie || '';
+    const stateCookie = cookieHeader
       .split(';')
       .find(cookie => cookie.trim().startsWith(`oauth-state-${state}=`));
 
@@ -153,11 +153,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('Redirecting to:', finalUrl.toString());
 
     // Set cookies so frontend can read login state quickly (also keeps access token server-readable)
-    const cookies: string[] = [];
-    cookies.push(`whop_access_token=${access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`);
-    cookies.push(`whop_logged_in=true; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`);
-    cookies.push(`whop_has_access=${hasAccess}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`);
-    res.setHeader('Set-Cookie', cookies);
+    const setCookies: string[] = [];
+    setCookies.push(`whop_access_token=${access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`);
+    setCookies.push(`whop_logged_in=true; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`);
+    setCookies.push(`whop_has_access=${hasAccess}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`);
+    res.setHeader('Set-Cookie', setCookies);
     res.redirect(finalUrl.toString());
 
   } catch (error: any) {
