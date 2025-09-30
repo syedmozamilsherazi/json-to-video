@@ -210,67 +210,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let hasAccess: boolean = false;
     
     try {
-      // Use Whop SDK to check membership instead of direct API calls for more reliability
-      const membershipResponse = await whopApi.memberships.list({
-        userId: userId,
-        productId: PRODUCT_ID,
-        valid: true, // Only get valid memberships (active, trialing, etc)
+      // Use Whop REST API v2 to check membership for this user and product
+      const membershipUrl = `https://api.whop.com/v2/memberships?user_id=${encodeURIComponent(userId)}&product_id=${encodeURIComponent(PRODUCT_ID)}&valid=true`;
+      console.log('Membership API URL:', membershipUrl);
+      
+      const membershipResponse = await fetch(membershipUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${WHOP_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
       });
 
-      if (membershipResponse.ok && membershipResponse.data) {
-        console.log('SDK Membership response:', JSON.stringify(membershipResponse.data, null, 2));
+      if (membershipResponse.ok) {
+        const membershipData = await membershipResponse.json() as WhopMembershipResponse;
+        console.log('Membership API response:', JSON.stringify(membershipData, null, 2));
         
         // Check if user has any valid memberships for this product
-        const validMemberships = membershipResponse.data.filter((membership: any) => {
-          const status = membership.status;
-          const isValidStatus = ['active', 'trialing', 'past_due'].includes(status);
-          console.log(`Membership ${membership.id} status: ${status}, valid: ${isValidStatus}`);
-          return isValidStatus;
-        });
-        
-        hasAccess = validMemberships.length > 0;
-        console.log(`Found ${validMemberships.length} valid memberships out of ${membershipResponse.data.length} total`);
-      } else {
-        console.warn('Failed to check membership via SDK:', membershipResponse.error || 'Unknown error');
-        
-        // Fallback to direct API call if SDK fails
-        console.log('Falling back to direct API call...');
-        const membershipUrl = `https://api.whop.com/v2/memberships?user_id=${userId}&product_id=${PRODUCT_ID}&valid=true`;
-        console.log('Fallback membership API URL:', membershipUrl);
-        
-        const membershipApiResponse = await fetch(membershipUrl, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${WHOP_API_KEY}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        });
-
-        if (membershipApiResponse.ok) {
-          const membershipData = await membershipApiResponse.json() as WhopMembershipResponse;
-          console.log('Fallback API response:', JSON.stringify(membershipData, null, 2));
-          
-          if (membershipData.data && Array.isArray(membershipData.data)) {
-            const validMemberships = membershipData.data.filter((membership: any) => {
-              const status = membership.status;
-              return ['active', 'trialing', 'past_due'].includes(status);
-            });
-            hasAccess = validMemberships.length > 0;
-            console.log(`Fallback: Found ${validMemberships.length} valid memberships`);
-          } else {
-            hasAccess = false;
-            console.log('Fallback: No membership data found');
-          }
+        if (membershipData.data && Array.isArray(membershipData.data)) {
+          const validMemberships = membershipData.data.filter((membership: any) => {
+            const status = membership.status;
+            return ['active', 'trialing', 'past_due'].includes(status);
+          });
+          hasAccess = validMemberships.length > 0;
+          console.log(`Found ${validMemberships.length} valid memberships`);
         } else {
-          const errorText = await membershipApiResponse.text();
-          console.warn('Fallback API also failed:', membershipApiResponse.status, membershipApiResponse.statusText);
-          console.warn('Error response body:', errorText);
           hasAccess = false;
+          console.log('No membership data found or invalid format');
         }
+        
+        console.log('Final membership check result:', hasAccess);
+      } else {
+        const errorText = await membershipResponse.text();
+        console.warn('Failed to check membership:', membershipResponse.status, membershipResponse.statusText);
+        console.warn('Error response body:', errorText);
+        hasAccess = false;
       }
-      
-      console.log('Final membership check result:', hasAccess);
     } catch (membershipError) {
       console.error('Error during membership check:', membershipError);
       hasAccess = false;

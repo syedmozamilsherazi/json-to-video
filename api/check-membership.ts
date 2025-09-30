@@ -1,16 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { WhopServerSdk } from '@whop/api';
 
 // Whop credentials and access pass product ID from environment
 const WHOP_API_KEY = process.env.WHOP_API_KEY as string;
-const WHOP_APP_ID = process.env.WHOP_APP_ID as string;
 const ACCESS_PASS_PRODUCT_ID = (process.env.WHOP_ACCESS_PASS_ID || process.env.WHOP_PRODUCT_ID || 'prod_iZZC4IzX2mi7v') as string;
-
-// Initialize Whop SDK
-const whopApi = WhopServerSdk({
-  appApiKey: WHOP_API_KEY,
-  appId: WHOP_APP_ID,
-});
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Add CORS headers
@@ -38,35 +30,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('Checking membership for user:', user_id);
     console.log('Access pass product ID:', ACCESS_PASS_PRODUCT_ID);
 
-    // Check if user has an active membership for the access pass product using Whop SDK
-    const membershipResponse = await whopApi.memberships.list({
-      user: user_id,
-      product: ACCESS_PASS_PRODUCT_ID,
+    // Use Whop REST API v2 to check memberships for this user and product
+    const url = `https://api.whop.com/v2/memberships?user_id=${encodeURIComponent(user_id)}&product_id=${encodeURIComponent(ACCESS_PASS_PRODUCT_ID)}&valid=true`;
+    console.log('Membership check URL:', url);
+
+    const resp = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${WHOP_API_KEY}`,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
     });
 
-    if (!membershipResponse.ok) {
-      console.error('Failed to fetch memberships:', membershipResponse.code, membershipResponse.raw?.statusText);
-      return res.status(500).json({ 
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error('Failed to fetch memberships:', resp.status, resp.statusText, text);
+      return res.status(200).json({
         error: 'Failed to check membership status',
-        hasAccess: false 
+        hasAccess: false
       });
     }
 
-    const memberships = membershipResponse.data;
-    console.log(`Found ${memberships.length} memberships for user ${user_id}`);
+    const data = await resp.json() as { data?: any[] };
+    const list = Array.isArray(data?.data) ? data.data : [];
+    console.log(`Found ${list.length} valid memberships for user ${user_id}`);
 
-    // Check if user has any active or trialing memberships for this product
-    const hasAccess = memberships.some((membership: any) => 
-      (membership.status === 'active' || membership.status === 'trialing') &&
-      membership.product === ACCESS_PASS_PRODUCT_ID
-    );
+    // Check if any valid memberships returned
+    const hasAccess = list.length > 0;
 
     console.log('User has access:', hasAccess);
 
     return res.status(200).json({
       hasAccess,
       userId: user_id,
-      membershipCount: memberships.length,
+      membershipCount: (Array.isArray((data as any)?.data) ? (data as any).data.length : 0),
       productId: ACCESS_PASS_PRODUCT_ID
     });
 
