@@ -107,18 +107,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const parsed = JSON.parse(decoded);
       next = parsed.next || '/';
     } catch {}
-    const nextUrl = new URL(next || '/', baseUrl);
-    
-    // Add session info to URL for the frontend to capture
-    nextUrl.searchParams.set('token', sessionToken);
-    nextUrl.searchParams.set('user_id', userData.id);
-    nextUrl.searchParams.set('has_access', hasAccess.toString());
+    // Choose final destination: prefer `next` if provided, else based on access
+    const fallbackPath = hasAccess ? '/generator' : '/home';
+    const finalPath = next && next !== '/' ? next : fallbackPath;
+    const finalUrl = new URL(finalPath, baseUrl);
 
-    console.log('Redirecting to:', nextUrl.toString());
+    // Add session info to URL for the frontend to capture
+    finalUrl.searchParams.set('token', sessionToken);
+    finalUrl.searchParams.set('user_id', userData.id);
+    finalUrl.searchParams.set('has_access', hasAccess.toString());
+
+    console.log('Redirecting to:', finalUrl.toString());
 
     // Set the access token in a secure cookie (following the docs example)
     res.setHeader('Set-Cookie', `whop_access_token=${access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`); // 7 days
-    res.redirect(nextUrl.toString());
+    res.redirect(finalUrl.toString());
 
   } catch (error: any) {
     console.error('OAuth callback error:', error);
