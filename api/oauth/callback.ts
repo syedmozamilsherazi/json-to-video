@@ -138,7 +138,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       next = parsed.next || '/';
     } catch {}
     // Choose final destination: prefer `next` if provided, else based on access
-    const fallbackPath = hasAccess ? '/generator' : '/home';
+    const fallbackPath = hasAccess ? '/generate' : '/home';
     const finalPath = next && next !== '/' ? next : fallbackPath;
     const finalUrl = new URL(finalPath, baseUrl);
 
