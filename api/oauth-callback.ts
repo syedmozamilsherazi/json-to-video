@@ -41,6 +41,8 @@ const whopApi = WhopServerSdk({
   appId: WHOP_APP_ID,
 });
 
+export const config = { runtime: 'nodejs20.x' };
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Add CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');

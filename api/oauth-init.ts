@@ -5,6 +5,8 @@ import { WhopServerSdk } from '@whop/api';
 const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
 const WHOP_APP_ID = 'app_z0Hznij7sCMJGz';
 
+export const config = { runtime: 'nodejs20.x' };
+
 // Initialize Whop SDK with env-based credentials
 let whopApi: any;
 

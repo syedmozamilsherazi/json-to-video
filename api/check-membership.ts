@@ -4,6 +4,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 const WHOP_API_KEY = 'vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws';
 const ACCESS_PASS_PRODUCT_ID = 'prod_iZZC4IzX2mi7v';
 
+export const config = { runtime: 'nodejs20.x' };
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Add CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');

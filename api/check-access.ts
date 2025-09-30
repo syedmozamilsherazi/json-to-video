@@ -10,6 +10,8 @@ interface SessionData {
 
 const PRODUCT_ID = 'prod_iZZC4IzX2mi7v';
 
+export const config = { runtime: 'nodejs20.x' };
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');

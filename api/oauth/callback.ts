@@ -6,6 +6,8 @@ const whopApi = WhopServerSdk({
   appId: 'app_z0Hznij7sCMJGz',
 });
 
+export const config = { runtime: 'nodejs20.x' };
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
