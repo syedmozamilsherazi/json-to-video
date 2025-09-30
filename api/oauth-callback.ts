@@ -121,11 +121,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let redirectUri: string;
     
     if (baseUrl.includes('localhost')) {
-      // Local development callback - use the same as production for consistency
-      redirectUri = 'https://json-to-video.vercel.app/api/oauth-callback';
+      // Local development callback (registered in Whop)
+      redirectUri = 'http://localhost:8080/oauth/callback';
     } else if (req.headers.host?.includes('json-to-video.vercel.app')) {
-      // Production Vercel callback
-      redirectUri = 'https://json-to-video.vercel.app/api/oauth-callback';
+      // Production callback (registered in Whop)
+      redirectUri = 'https://json-to-video.vercel.app/api/auth/callback';
     } else {
       // Fallback to current host callback
       redirectUri = `${baseUrl}/api/oauth-callback`;
@@ -141,8 +141,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (!authResponse.ok) {
-      console.error('Token exchange failed:', authResponse.code, authResponse.raw?.statusText);
-      return res.redirect('/oauth/error?error=token_exchange_failed');
+      let details: string | undefined;
+      try {
+        if (authResponse.raw) {
+          const text = await authResponse.raw.text();
+          details = `raw=${text}`;
+        } else if ((authResponse as any).error) {
+          details = `error=${(authResponse as any).error}`;
+        }
+      } catch {}
+      console.error('Token exchange failed:', authResponse.code, authResponse.raw?.statusText, details || '');
+      return res.redirect('/oauth/error?error=token_exchange_failed&reason=redirect_uri_or_client_mismatch');
     }
 
     const { access_token } = authResponse.tokens;

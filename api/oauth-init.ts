@@ -73,13 +73,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let redirectUri: string;
     
     if (baseUrl.includes('localhost')) {
-      // Local development callback - use production endpoint for consistency
-      redirectUri = 'https://json-to-video.vercel.app/api/oauth-callback';
+      // Local development callback (registered in Whop)
+      redirectUri = 'http://localhost:8080/oauth/callback';
     } else if (req.headers.host?.includes('json-to-video.vercel.app')) {
-      // Production Vercel callback
-      redirectUri = 'https://json-to-video.vercel.app/api/oauth-callback';
+      // Production callback (registered in Whop)
+      redirectUri = 'https://json-to-video.vercel.app/api/auth/callback';
     } else {
-      // Fallback to current host callback
+      // Fallback to current host callback (kept for flexibility)
       redirectUri = `${baseUrl}/api/oauth-callback`;
     }
 
