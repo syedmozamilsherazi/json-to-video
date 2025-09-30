@@ -1,4 +1,6 @@
 import { useState, useRef } from "react";
+import { Navigate } from "react-router-dom";
+import { useWhop } from "@/contexts/WhopContext";
 import Navigation from "@/components/Navigation";
 import { useApiKey } from "@/contexts/ApiKeyContext";
 import { Button } from "@/components/ui/button";
@@ -12,6 +14,15 @@ import { Video, Image, Music, Upload, FileAudio, X, Zap, Lightbulb, Play, Camera
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 const Index = () => {
+  const { isLoaded, isCheckingAccess, hasAccess } = useWhop();
+
+  if (!isLoaded || isCheckingAccess) {
+    return <div className="min-h-screen bg-background"><Navigation /><div className="container mx-auto px-4 py-8">Checking access...</div></div>;
+  }
+
+  if (!hasAccess) {
+    return <Navigate to="/home" replace />;
+  }
   const [videoType, setVideoType] = useState<'clips' | 'images'>('clips');
   const [contentLinks, setContentLinks] = useState("");
   const [musicLink, setMusicLink] = useState("");

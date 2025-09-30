@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ApiKeyProvider } from "@/contexts/ApiKeyContext";
 import { WhopProvider } from "@/contexts/WhopContext";
 import Index from "./pages/Index";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import ExperiencePage from "./pages/ExperiencePage";
 import OAuthCallback from "./pages/OAuthCallback";
 import OAuthError from "./pages/OAuthError";
@@ -26,7 +27,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<ExperiencePage />} />
                 <Route path="/home" element={<ExperiencePage />} />
-                <Route path="/generate" element={<Index />} />
+                <Route path="/generate" element={<ProtectedRoute><Index /></ProtectedRoute>} />
                 <Route path="/oauth/callback" element={<OAuthCallback />} />
                 <Route path="/oauth/error" element={<OAuthError />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
