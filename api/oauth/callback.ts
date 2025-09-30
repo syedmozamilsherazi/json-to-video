@@ -86,9 +86,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (memRes.ok) {
       const data = await memRes.json() as any;
       const memberships: any[] = data.data || [];
+      console.log('Memberships payload:', JSON.stringify(memberships.slice(0, 5)));
       hasAccess = memberships.some((m: any) => {
         const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
-        return (m.status === 'active' || m.status === 'trialing') && pid === 'prod_iZZC4IzX2mi7v';
+        const planId = (m.plan && typeof m.plan === 'object' ? m.plan.id : m.plan) || m.plan_id;
+        const statusOk = m.status === 'active' || m.status === 'trialing' || m.status === 'past_due';
+        const productMatch = pid === 'prod_iZZC4IzX2mi7v';
+        const planMatch = planId === 'plan_0DGjXrTvavvWm';
+        if (statusOk && (productMatch || planMatch)) {
+          console.log('Matched membership:', { id: m.id, status: m.status, pid, planId });
+          return true;
+        }
+        return false;
       });
     }
 

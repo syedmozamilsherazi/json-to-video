@@ -61,7 +61,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       memberships = membershipsData.data || [];
       hasAccess = memberships.some((m: any) => {
         const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
-        return (m.status === 'active' || m.status === 'trialing') && pid === PRODUCT_ID;
+        const planId = (m.plan && typeof m.plan === 'object' ? m.plan.id : m.plan) || m.plan_id;
+        const statusOk = m.status === 'active' || m.status === 'trialing' || m.status === 'past_due';
+        return statusOk && (pid === PRODUCT_ID || planId === 'plan_0DGjXrTvavvWm');
       });
     }
 
