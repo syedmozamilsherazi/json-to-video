@@ -26,7 +26,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<ExperiencePage />} />
                 <Route path="/home" element={<ExperiencePage />} />
-                <Route path="/generator" element={<Index />} />
+                <Route path="/generate" element={<Index />} />
                 <Route path="/oauth/callback" element={<OAuthCallback />} />
                 <Route path="/oauth/error" element={<OAuthError />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

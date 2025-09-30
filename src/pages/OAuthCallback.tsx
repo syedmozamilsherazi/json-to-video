@@ -86,7 +86,7 @@ export default function OAuthCallback() {
           // Redirect to the appropriate page based on access
           setTimeout(() => {
             if (hasAccess === 'true') {
-              navigate('/generator', { replace: true });
+              navigate('/generate', { replace: true });
             } else {
               navigate('/home', { replace: true }); // Redirect to subscription page if no access
             }

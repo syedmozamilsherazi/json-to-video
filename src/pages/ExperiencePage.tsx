@@ -19,7 +19,7 @@ export default function ExperiencePage() {
         toast({ title: "Access granted", description: "Welcome! Redirecting to the generator..." });
       }
       prevAccess.current = true;
-      navigate("/generator", { replace: true });
+      navigate("/generate", { replace: true });
     }
   }, [hasAccess, isCheckingAccess, navigate, toast]);
 
