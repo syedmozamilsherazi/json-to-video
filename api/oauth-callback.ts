@@ -145,7 +145,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.redirect('/oauth/error?error=token_exchange_failed&reason=redirect_uri_or_client_mismatch');
     }
 
-    const { access_token } = authResponse.tokens;
+    const { access_token } = (authResponse as any).tokens as any;
     console.log('Successfully exchanged code for access token');
 
     // Get user info using Whop REST API (v5) with the user's access token
