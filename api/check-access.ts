@@ -60,10 +60,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const membershipsData = await membershipsResponse.json();
       memberships = membershipsData.data || [];
       hasAccess = memberships.some((m: any) => {
-        const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
+        const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product)
+          || m.product_id
+          || (m.access_pass && typeof m.access_pass === 'object' ? m.access_pass.id : undefined);
         const planId = (m.plan && typeof m.plan === 'object' ? m.plan.id : m.plan) || m.plan_id;
-        const statusOk = m.status === 'active' || m.status === 'trialing' || m.status === 'past_due';
-        return statusOk && (pid === PRODUCT_ID || planId === 'plan_0DGjXrTvavvWm');
+        const statusOk = m.status === 'active' || m.status === 'trialing' || m.status === 'past_due' || m.status === 'completed';
+        return statusOk && (pid === PRODUCT_ID || planId === 'plan_w7rTs220QFTAC');
       });
     }
 
@@ -77,7 +79,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (v2Resp.ok) {
           const v2Json: any = await v2Resp.json();
           const list: any[] = Array.isArray(v2Json?.data) ? v2Json.data : [];
-          hasAccess = list.some((m: any) => ['active', 'trialing', 'past_due'].includes(m.status));
+          hasAccess = list.some((m: any) => {
+            const statusOk = ['active', 'trialing', 'past_due', 'completed'].includes(m.status);
+            const pid = m.product_id || m.product || (m.access_pass && m.access_pass.id);
+            return statusOk && pid === PRODUCT_ID;
+          });
         }
       } catch {}
     }

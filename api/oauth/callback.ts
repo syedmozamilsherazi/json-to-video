@@ -89,11 +89,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const memberships: any[] = data.data || [];
       console.log('Memberships payload:', JSON.stringify(memberships.slice(0, 5)));
       hasAccess = memberships.some((m: any) => {
-        const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
+        const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) 
+          || m.product_id 
+          || (m.access_pass && typeof m.access_pass === 'object' ? m.access_pass.id : undefined);
         const planId = (m.plan && typeof m.plan === 'object' ? m.plan.id : m.plan) || m.plan_id;
-        const statusOk = m.status === 'active' || m.status === 'trialing' || m.status === 'past_due';
+        const statusOk = m.status === 'active' || m.status === 'trialing' || m.status === 'past_due' || m.status === 'completed';
         const productMatch = pid === 'prod_iZZC4IzX2mi7v';
-        const planMatch = planId === 'plan_0DGjXrTvavvWm';
+        const planMatch = planId === 'plan_w7rTs220QFTAC';
         if (statusOk && (productMatch || planMatch)) {
           console.log('Matched membership:', { id: m.id, status: m.status, pid, planId });
           return true;
@@ -114,7 +116,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           const list: any[] = Array.isArray(v2Json?.data) ? v2Json.data : [];
           hasAccess = list.some((m: any) => {
             const status = m.status;
-            return ['active', 'trialing', 'past_due'].includes(status);
+            const pid = m.product_id || m.product || (m.access_pass && m.access_pass.id);
+            const statusOk = ['active', 'trialing', 'past_due', 'completed'].includes(status);
+            return statusOk && pid === 'prod_iZZC4IzX2mi7v';
           });
           console.log('V2 memberships found:', list.length, 'hasAccess:', hasAccess);
         } else {
