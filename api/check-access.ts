@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import Whop from '@whop/api';
+// Removed SDK import; using HTTP v5 session flow only
 
 interface SessionData {
   access_token: string;

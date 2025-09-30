@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : 'https://json-to-video.vercel.app/api/auth/callback';
     const { url, state } = whopApi.oauth.getAuthorizationUrl({
       redirectUri,
-      scope: ["read_user", "read_memberships"],
+      scope: ["read_user"],
     });
 
     console.log('OAuth Authorization URL:', url);

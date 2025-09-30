@@ -57,8 +57,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     if (!authResponse.ok) {
-      const body = authResponse.raw ? await authResponse.raw.text() : '';
-      console.error('Token exchange failed:', authResponse.code, body);
+      let body = '';
+      try { body = await (authResponse as any).raw.text(); } catch {}
+      const code = (authResponse as any).code;
+      console.error('Token exchange failed:', code, body);
       return res.redirect('/?error=code_exchange_failed');
     }
 

@@ -75,7 +75,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Generate authorization URL using Whop SDK
     const { url, state } = whopApi.oauth.getAuthorizationUrl({
       redirectUri,
-      scope: ['read_user', 'read_memberships'] as any,
+      scope: ['read_user'] as any,
     });
 
     console.log('Generated OAuth URL:', url);
