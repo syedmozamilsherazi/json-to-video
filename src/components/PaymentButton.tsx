@@ -25,10 +25,16 @@ export function PaymentButton({ displayText, planId }: PaymentButtonProps) {
     setIsLoading(true);
     try {
       console.log('Starting checkout for plan:', actualPlanId);
+      const timeout = setTimeout(() => {
+        // Fallback in case redirect failed
+        setIsLoading(false);
+      }, 10000);
+
       const result = await iframeSdk.inAppPurchase({ planId: actualPlanId });
 
       if (result.status === "error") {
         alert(result.error);
+        clearTimeout(timeout);
         setIsLoading(false);
         return;
       }
@@ -36,17 +42,18 @@ export function PaymentButton({ displayText, planId }: PaymentButtonProps) {
       // If redirect status, the SDK will handle the redirect to Whop checkout
       if (result.status === "redirect") {
         console.log('Redirecting to Whop checkout...');
-        // Loading will continue until redirect happens
+        // Keep spinner until redirect; timeout will clear if something goes wrong
         return;
       }
 
       // After successful payment and redirect back, refresh access status
       await refreshAccess();
+      clearTimeout(timeout);
       setIsLoading(false);
     } catch (error: any) {
       console.error('Payment error:', error);
-      alert('Payment failed. Please try again.');
       setIsLoading(false);
+      alert('Payment failed. Please try again.');
     }
   }, [actualPlanId, iframeSdk, refreshAccess]);
 

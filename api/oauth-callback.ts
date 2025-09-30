@@ -133,17 +133,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       redirectUri,
     });
 
-    if (!authResponse.ok) {
-      let details: string | undefined;
+    if ((authResponse as any).ok !== true) {
+      let details = '';
       try {
-        if (authResponse.raw) {
-          const text = await authResponse.raw.text();
-          details = `raw=${text}`;
-        } else if ((authResponse as any).error) {
-          details = `error=${(authResponse as any).error}`;
+        const raw: any = (authResponse as any).raw;
+        if (raw && typeof raw.text === 'function') {
+          details = await raw.text();
         }
       } catch {}
-      console.error('Token exchange failed:', authResponse.code, authResponse.raw?.statusText, details || '');
+      console.error('Token exchange failed:', (authResponse as any).code, details);
       return res.redirect('/oauth/error?error=token_exchange_failed&reason=redirect_uri_or_client_mismatch');
     }
 
@@ -179,7 +177,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     // Extract user_id from response - handle different possible response structures
     let userId: string;
-    let userData: WhopUser;
+    let userData: any;
     
     if (userResponseData.user) {
       // Structure: { user: { id, email, ... } }
@@ -198,51 +196,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('User email:', userData.email || 'N/A');
     console.log('User username:', userData.username || 'N/A');
 
-    // Check membership status using server-side WHOP_API_KEY
-    console.log('Checking membership for user:', userId, 'product:', PRODUCT_ID);
+    // Check membership status using v5 API (user access token)
+    console.log('Checking memberships via v5 for product:', PRODUCT_ID);
     let hasAccess: boolean = false;
-    
     try {
-      // Use Whop REST API v2 to check membership for this user and product
-      const membershipUrl = `https://api.whop.com/v2/memberships?user_id=${encodeURIComponent(userId)}&product_id=${encodeURIComponent(PRODUCT_ID)}&valid=true`;
-      console.log('Membership API URL:', membershipUrl);
-      
-      const membershipResponse = await fetch(membershipUrl, {
+      const memRes = await fetch('https://api.whop.com/v5/me/memberships', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${WHOP_API_KEY}`,
+          'Authorization': `Bearer ${access_token}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
       });
-
-      if (membershipResponse.ok) {
-        const membershipData = await membershipResponse.json() as WhopMembershipResponse;
-        console.log('Membership API response:', JSON.stringify(membershipData, null, 2));
-        
-        // Check if user has any valid memberships for this product
-        if (membershipData.data && Array.isArray(membershipData.data)) {
-          const validMemberships = membershipData.data.filter((membership: any) => {
-            const status = membership.status;
-            return ['active', 'trialing', 'past_due'].includes(status);
-          });
-          hasAccess = validMemberships.length > 0;
-          console.log(`Found ${validMemberships.length} valid memberships`);
-        } else {
-          hasAccess = false;
-          console.log('No membership data found or invalid format');
-        }
-        
-        console.log('Final membership check result:', hasAccess);
+      if (memRes.ok) {
+        const memJson: any = await memRes.json();
+        const list: any[] = Array.isArray(memJson?.data) ? memJson.data : [];
+        hasAccess = list.some((m: any) => {
+          const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
+          return (m.status === 'active' || m.status === 'trialing') && pid === PRODUCT_ID;
+        });
+        console.log('Memberships found:', list.length, 'hasAccess:', hasAccess);
       } else {
-        const errorText = await membershipResponse.text();
-        console.warn('Failed to check membership:', membershipResponse.status, membershipResponse.statusText);
-        console.warn('Error response body:', errorText);
-        hasAccess = false;
+        const t = await memRes.text();
+        console.warn('Failed to fetch memberships v5:', memRes.status, t);
       }
     } catch (membershipError) {
-      console.error('Error during membership check:', membershipError);
-      hasAccess = false;
+      console.error('Error during v5 membership check:', membershipError);
     }
 
     // Set secure HttpOnly cookies for user ID and access status (cross-device)
