@@ -60,17 +60,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const membershipsData = await membershipsResponse.json();
       memberships = membershipsData.data || [];
       hasAccess = memberships.some((m: any) => {
-        const pid = (m.product && typeof m.product === 'object' ? m.product.id : m.product) || m.product_id;
-        const planId = (m.plan && typeof m.plan === 'object' ? m.plan.id : m.plan) || m.plan_id;
         const statusOk = m.status === 'active' || m.status === 'trialing' || m.status === 'past_due';
-        return statusOk && (pid === PRODUCT_ID || planId === 'plan_0DGjXrTvavvWm');
+        return statusOk;
       });
     }
 
     // Fallback to v2 with server app key if needed
     if (!hasAccess) {
       try {
-        const v2Url = `https://api.whop.com/v2/memberships?user_id=${encodeURIComponent(userData.id)}&product_id=${encodeURIComponent(PRODUCT_ID)}&valid=true`;
+        const v2Url = `https://api.whop.com/v2/memberships?user_id=${encodeURIComponent(userData.id)}&valid=true`;
         const v2Resp = await fetch(v2Url, {
           headers: { 'Authorization': `Bearer vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws`, 'Accept': 'application/json' }
         });
