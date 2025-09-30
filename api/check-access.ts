@@ -67,6 +67,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    // Fallback to v2 with server app key if needed
+    if (!hasAccess) {
+      try {
+        const v2Url = `https://api.whop.com/v2/memberships?user_id=${encodeURIComponent(userData.id)}&product_id=${encodeURIComponent(PRODUCT_ID)}&valid=true`;
+        const v2Resp = await fetch(v2Url, {
+          headers: { 'Authorization': `Bearer vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws`, 'Accept': 'application/json' }
+        });
+        if (v2Resp.ok) {
+          const v2Json: any = await v2Resp.json();
+          const list: any[] = Array.isArray(v2Json?.data) ? v2Json.data : [];
+          hasAccess = list.some((m: any) => ['active', 'trialing', 'past_due'].includes(m.status));
+        }
+      } catch {}
+    }
+
     return res.status(200).json({ 
       hasAccess,
       user: {

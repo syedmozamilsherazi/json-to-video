@@ -101,6 +101,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    // Fallback: server-side v2 membership check with app key if not found in v5
+    if (!hasAccess) {
+      try {
+        const v2Url = `https://api.whop.com/v2/memberships?user_id=${encodeURIComponent(userData.id)}&product_id=${encodeURIComponent('prod_iZZC4IzX2mi7v')}&valid=true`;
+        const v2Resp = await fetch(v2Url, {
+          headers: { 'Authorization': `Bearer vtecLpF8ydpmxsbl3fir5ZhjQiOYYqYnX6Xh2dWZzws`, 'Accept': 'application/json' }
+        });
+        if (v2Resp.ok) {
+          const v2Json: any = await v2Resp.json();
+          const list: any[] = Array.isArray(v2Json?.data) ? v2Json.data : [];
+          hasAccess = list.some((m: any) => {
+            const status = m.status;
+            return ['active', 'trialing', 'past_due'].includes(status);
+          });
+          console.log('V2 memberships found:', list.length, 'hasAccess:', hasAccess);
+        } else {
+          const t = await v2Resp.text();
+          console.warn('V2 membership check failed:', v2Resp.status, t);
+        }
+      } catch (e) {
+        console.warn('V2 membership check error:', e);
+      }
+    }
+
     // Create a secure session token
     const sessionToken = Buffer.from(JSON.stringify({
       access_token,
@@ -128,8 +152,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log('Redirecting to:', finalUrl.toString());
 
-    // Set the access token in a secure cookie (following the docs example)
-    res.setHeader('Set-Cookie', `whop_access_token=${access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`); // 7 days
+    // Set cookies so frontend can read login state quickly (also keeps access token server-readable)
+    const cookies: string[] = [];
+    cookies.push(`whop_access_token=${access_token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=604800`);
+    cookies.push(`whop_logged_in=true; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`);
+    cookies.push(`whop_has_access=${hasAccess}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`);
+    res.setHeader('Set-Cookie', cookies);
     res.redirect(finalUrl.toString());
 
   } catch (error: any) {
