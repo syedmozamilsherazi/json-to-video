@@ -209,15 +209,12 @@ const Index = () => {
     }
     setIsProcessingAudio(true);
     try {
-      const fileName = `audio_${Date.now()}_${file.name}`;
-      const {
-        data,
-        error
-      } = await supabase.storage.from('audio-files').upload(fileName, file);
+      const fileName = `audio/audio_${Date.now()}_${file.name}`;
+      // Ensure the 'clips' bucket exists (shared with styles)
+      await ensureBucket('clips', true);
+      const { data, error } = await supabase.storage.from('clips').upload(fileName, file, { upsert: true });
       if (error) throw error;
-      const {
-        data: urlData
-      } = supabase.storage.from('audio-files').getPublicUrl(fileName);
+      const { data: urlData } = supabase.storage.from('clips').getPublicUrl(fileName);
       setAudioUrl(urlData.publicUrl);
       setUploadedAudio(file);
       const audio = new Audio();
