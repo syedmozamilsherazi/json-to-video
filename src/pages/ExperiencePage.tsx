@@ -48,11 +48,11 @@ export default function ExperiencePage() {
   }
 
   return (
-    <div>
+    <div className="min-h-screen bg-background">
       {hasAccess ? (
-        <div>
+        <div className="container mx-auto px-4 py-8">
           {user && (
-            <div className="bg-green-50 border border-green-200 p-3 mb-4">
+            <div className="bg-green-50 border border-green-200 p-3 mb-4 rounded-md">
               <p className="text-sm text-green-700">
                 Welcome back, {user.username || user.email || 'user'}! ✅ Premium access active
               </p>
@@ -74,10 +74,8 @@ interface UpsellScreenProps {
 }
 
 function UpsellScreen({ onLogin }: UpsellScreenProps) {
-  const { refreshAccess, isCheckingAccess } = useWhop();
-  
   return (
-    <div className="p-8 rounded-2xl shadow-sm border border-[#E5E7EB] bg-white text-foreground space-y-6 max-w-md w-full text-center">
+    <div className="p-8 rounded-2xl shadow-sm border border-[#E0E0E0] bg-card text-foreground space-y-6 max-w-md w-full text-center">
       <h2 className="text-2xl font-bold text-[#000000]">Unlock Premium</h2>
       <p className="text-sm text-[#6B6F76]">Get premium access to all features with cross-device sync</p>
       
@@ -113,26 +111,6 @@ function UpsellScreen({ onLogin }: UpsellScreenProps) {
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
             </svg>
             Login with Whop
-          </button>
-          
-          <button
-            onClick={() => refreshAccess()}
-            disabled={isCheckingAccess}
-            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-6 py-2 rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2"
-          >
-            {isCheckingAccess ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                Checking...
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Check Access
-              </>
-            )}
           </button>
         </div>
       </div>

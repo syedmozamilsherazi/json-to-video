@@ -7,6 +7,7 @@ import { Edit, Trash2, Loader2 } from 'lucide-react';
 import { stylesSupabase as supabase } from '@/integrations/supabase/stylesClient';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { ensureBucket } from '@/lib/storage';
 
 interface StyleData {
   displayName: string;
@@ -26,6 +27,7 @@ export const StyleManagement = ({ isOpen, onClose, onStyleUpdated }: StyleManage
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [styleToDelete, setStyleToDelete] = useState<StyleData | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [stylesBucket, setStylesBucket] = useState<string>((import.meta as any)?.env?.VITE_STYLES_BUCKET || 'clips');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -38,13 +40,31 @@ export const StyleManagement = ({ isOpen, onClose, onStyleUpdated }: StyleManage
   const loadStyles = async () => {
     setLoading(true);
     try {
-      const { data: folders, error: foldersError } = await supabase.storage
-        .from('clips')
+      let foldersRes = await supabase.storage
+        .from(stylesBucket)
         .list('', {
           limit: 100,
           offset: 0
         });
 
+      if (foldersRes.error && /Bucket not found/i.test(foldersRes.error.message)) {
+        // Try to create the desired bucket automatically
+        const created = await ensureBucket(stylesBucket, true);
+        if (created) {
+          foldersRes = await supabase.storage
+            .from(stylesBucket)
+            .list('', { limit: 100, offset: 0 });
+        } else {
+          // Fallback to 'audio-files' if creation failed
+          setStylesBucket('audio-files');
+          await ensureBucket('audio-files', true);
+          foldersRes = await supabase.storage
+            .from('audio-files')
+            .list('', { limit: 100, offset: 0 });
+        }
+      }
+
+      const { data: folders, error: foldersError } = foldersRes;
       if (foldersError) {
         console.error('Error fetching folders:', foldersError);
         return;
@@ -58,12 +78,27 @@ export const StyleManagement = ({ isOpen, onClose, onStyleUpdated }: StyleManage
       
       for (const folder of styleFolders) {
         const displayName = folder.name;
-        const { data: folderFiles, error: folderError } = await supabase.storage
-          .from('clips')
+        let folderList = await supabase.storage
+          .from(stylesBucket)
           .list(folder.name, {
             limit: 100,
             offset: 0
           });
+        if (folderList.error && /Bucket not found/i.test(folderList.error.message)) {
+          const created = await ensureBucket(stylesBucket, true);
+          if (created) {
+            folderList = await supabase.storage
+              .from(stylesBucket)
+              .list(folder.name, { limit: 100, offset: 0 });
+          } else {
+            setStylesBucket('audio-files');
+            await ensureBucket('audio-files', true);
+            folderList = await supabase.storage
+              .from('audio-files')
+              .list(folder.name, { limit: 100, offset: 0 });
+          }
+        }
+        const { data: folderFiles, error: folderError } = folderList;
 
         if (folderError) {
           console.error('Error fetching folder files:', folderError);
@@ -78,7 +113,7 @@ export const StyleManagement = ({ isOpen, onClose, onStyleUpdated }: StyleManage
         
         if (videoFiles.length > 0) {
           const { data } = supabase.storage
-            .from('clips')
+            .from(stylesBucket)
             .getPublicUrl(`${folder.name}/${videoFiles[0].name}`);
 
           const { data: clipData, error: clipError } = await supabase
@@ -133,12 +168,29 @@ export const StyleManagement = ({ isOpen, onClose, onStyleUpdated }: StyleManage
     
     setDeleting(true);
     try {
-      const { data: files, error: listError } = await supabase.storage
-        .from('clips')
+      let listRes = await supabase.storage
+        .from(stylesBucket)
         .list(styleToDelete.displayName, {
           limit: 100,
           offset: 0
         });
+
+      if (listRes.error && /Bucket not found/i.test(listRes.error.message)) {
+        const created = await ensureBucket(stylesBucket, true);
+        if (created) {
+          listRes = await supabase.storage
+            .from(stylesBucket)
+            .list(styleToDelete.displayName, { limit: 100, offset: 0 });
+        } else {
+          setStylesBucket('audio-files');
+          await ensureBucket('audio-files', true);
+          listRes = await supabase.storage
+            .from('audio-files')
+            .list(styleToDelete.displayName, { limit: 100, offset: 0 });
+        }
+      }
+
+      const { data: files, error: listError } = listRes;
 
       if (listError) {
         throw new Error(`Failed to list files: ${listError.message}`);
@@ -146,9 +198,24 @@ export const StyleManagement = ({ isOpen, onClose, onStyleUpdated }: StyleManage
 
       if (files && files.length > 0) {
         const filePaths = files.map(file => `${styleToDelete.displayName}/${file.name}`);
-        const { error: deleteFilesError } = await supabase.storage
-          .from('clips')
+        let delRes = await supabase.storage
+          .from(stylesBucket)
           .remove(filePaths);
+        if (delRes.error && /Bucket not found/i.test(delRes.error.message)) {
+          const created = await ensureBucket(stylesBucket, true);
+          if (created) {
+            delRes = await supabase.storage
+              .from(stylesBucket)
+              .remove(filePaths);
+          } else {
+            setStylesBucket('audio-files');
+            await ensureBucket('audio-files', true);
+            delRes = await supabase.storage
+              .from('audio-files')
+              .remove(filePaths);
+          }
+        }
+        const deleteFilesError = delRes.error;
 
         if (deleteFilesError) {
           throw new Error(`Failed to delete files: ${deleteFilesError.message}`);

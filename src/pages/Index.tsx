@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { stylesSupabase } from "@/integrations/supabase/stylesClient";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StyleManagement } from "@/components/StyleManagement";
+import { ensureBucket } from "@/lib/storage";
 const Index = () => {
   const { isLoaded, isCheckingAccess, hasAccess } = useWhop();
 
@@ -39,6 +40,7 @@ const Index = () => {
   const [styleManagementOpen, setStyleManagementOpen] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<string>("");
   const [availablePersons, setAvailablePersons] = useState<{ displayName: string; dbValue: string }[]>([]);
+  const [stylesBucket, setStylesBucket] = useState<string>((import.meta as any)?.env?.VITE_STYLES_BUCKET || 'clips');
   const {
     apiKey,
     hasApiKey
@@ -58,12 +60,29 @@ const Index = () => {
   // Fetch available persons/styles from Supabase 'clips' bucket
   const fetchPersons = async () => {
     try {
-      const { data: folders, error: foldersError } = await stylesSupabase.storage
-        .from('clips')
+      let foldersRes = await stylesSupabase.storage
+        .from(stylesBucket)
         .list('', {
           limit: 100,
           offset: 0
         });
+
+      if (foldersRes.error && /Bucket not found/i.test(foldersRes.error.message)) {
+        const created = await ensureBucket(stylesBucket, true);
+        if (created) {
+          foldersRes = await stylesSupabase.storage
+            .from(stylesBucket)
+            .list('', { limit: 100, offset: 0 });
+        } else {
+          setStylesBucket('audio-files');
+          await ensureBucket('audio-files', true);
+          foldersRes = await stylesSupabase.storage
+            .from('audio-files')
+            .list('', { limit: 100, offset: 0 });
+        }
+      }
+
+      const { data: folders, error: foldersError } = foldersRes;
 
       if (foldersError) {
         console.error('Error fetching folders:', foldersError);
@@ -78,12 +97,27 @@ const Index = () => {
       
       for (const folder of styleFolders) {
         const displayName = folder.name;
-        const { data: folderFiles, error: folderError } = await stylesSupabase.storage
-          .from('clips')
+        let folderList = await stylesSupabase.storage
+          .from(stylesBucket)
           .list(folder.name, {
             limit: 100,
             offset: 0
           });
+        if (folderList.error && /Bucket not found/i.test(folderList.error.message)) {
+          const created = await ensureBucket(stylesBucket, true);
+          if (created) {
+            folderList = await stylesSupabase.storage
+              .from(stylesBucket)
+              .list(folder.name, { limit: 100, offset: 0 });
+          } else {
+            setStylesBucket('audio-files');
+            await ensureBucket('audio-files', true);
+            folderList = await stylesSupabase.storage
+              .from('audio-files')
+              .list(folder.name, { limit: 100, offset: 0 });
+          }
+        }
+        const { data: folderFiles, error: folderError } = folderList;
 
         if (folderError) {
           console.error('Error fetching folder files:', folderError);
@@ -98,7 +132,7 @@ const Index = () => {
         
         if (videoFiles.length > 0) {
           const { data } = stylesSupabase.storage
-            .from('clips')
+            .from(stylesBucket)
             .getPublicUrl(`${folder.name}/${videoFiles[0].name}`);
 
           const { data: clipData, error: clipError } = await stylesSupabase
@@ -129,15 +163,30 @@ const Index = () => {
   // Helper to get public URLs of clips for a selected style (folder)
   const getStyleClipUrls = async (styleDisplayName: string): Promise<string[]> => {
     try {
-      const { data: folderFiles, error: folderError } = await stylesSupabase.storage
-        .from('clips')
+      let listRes = await stylesSupabase.storage
+        .from(stylesBucket)
         .list(styleDisplayName, { limit: 200, offset: 0 });
+      if (listRes.error && /Bucket not found/i.test(listRes.error.message)) {
+        const created = await ensureBucket(stylesBucket, true);
+        if (created) {
+          listRes = await stylesSupabase.storage
+            .from(stylesBucket)
+            .list(styleDisplayName, { limit: 200, offset: 0 });
+        } else {
+          setStylesBucket('audio-files');
+          await ensureBucket('audio-files', true);
+          listRes = await stylesSupabase.storage
+            .from('audio-files')
+            .list(styleDisplayName, { limit: 200, offset: 0 });
+        }
+      }
+      const { data: folderFiles, error: folderError } = listRes;
       if (folderError) throw folderError;
       const videoFiles = (folderFiles || []).filter(f => f.metadata && f.name.includes('.'));
       const urls: string[] = [];
       for (const f of videoFiles) {
         const { data } = stylesSupabase.storage
-          .from('clips')
+          .from(stylesBucket)
           .getPublicUrl(`${styleDisplayName}/${f.name}`);
         urls.push(data.publicUrl);
       }
@@ -364,51 +413,6 @@ const Index = () => {
             
             
             <CardContent className="space-y-8 p-8">
-              {/* Style Selection */}
-              <div className="space-y-6 p-6 bg-muted rounded-xl border border-[#E0E0E0]">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-[#E0E0E0] rounded-lg shadow-sm">
-                    <Headphones className="h-4 w-4 text-[#000000]" />
-                  </div>
-                  <Label className="text-lg font-semibold text-[#000000]">Choose Style</Label>
-                </div>
-                <div className="space-y-2">
-          <Label className="text-sm font-medium text-[#000000]">Style</Label>
-                  <Select value={selectedPerson} onValueChange={setSelectedPerson}>
-                    <SelectTrigger className="h-12">
-                      <SelectValue placeholder="Select a style" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availablePersons.map((person) => (
-                        <SelectItem key={person.dbValue} value={person.displayName}>
-                          {person.displayName}
-                        </SelectItem>
-                      ))}
-                      <div className="border-t mt-2 pt-2 space-y-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start gap-2"
-                          onClick={() => (window.location.href = '/add-style')}
-                        >
-                          <Plus className="h-4 w-4" />
-                          Add New Style
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full justify-start gap-2"
-                          onClick={() => setStyleManagementOpen(true)}
-                        >
-                          <Settings className="h-4 w-4" />
-                          Manage Styles
-                        </Button>
-                      </div>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
               {/* Video Type Selection */}
               <div className="space-y-6 p-6 bg-muted rounded-xl border border-[#E0E0E0]">
                 <div className="flex items-center gap-3">
@@ -491,6 +495,51 @@ const Index = () => {
                       <AlertCircle className="h-5 w-5 text-[#6B6F76]" />
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Style Selection (moved after Links) */}
+              <div className="space-y-6 p-6 bg-muted rounded-xl border border-[#E0E0E0]">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#E0E0E0] rounded-lg shadow-sm">
+                    <Headphones className="h-4 w-4 text-[#000000]" />
+                  </div>
+                  <Label className="text-lg font-semibold text-[#000000]">Choose Style</Label>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-[#000000]">Style</Label>
+                  <Select value={selectedPerson} onValueChange={setSelectedPerson}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Select a style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availablePersons.map((person) => (
+                        <SelectItem key={person.dbValue} value={person.displayName}>
+                          {person.displayName}
+                        </SelectItem>
+                      ))}
+                      <div className="border-t mt-2 pt-2 space-y-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start gap-2"
+                          onClick={() => (window.location.href = '/add-style')}
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add New Style
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start gap-2"
+                          onClick={() => setStyleManagementOpen(true)}
+                        >
+                          <Settings className="h-4 w-4" />
+                          Manage Styles
+                        </Button>
+                      </div>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -616,7 +665,7 @@ const Index = () => {
               {/* Generate Button */}
               <Button 
                 onClick={generateAndRenderVideo} 
-                disabled={isGenerating || !uploadedAudio || !contentLinks.trim() || !hasApiKey} 
+                disabled={isGenerating || !uploadedAudio || (!contentLinks.trim() && !selectedPerson) || !hasApiKey} 
                 className="w-full h-16 text-base font-semibold bg-black hover:bg-black/90 text-white rounded-xl shadow-sm disabled:opacity-50" 
                 size="lg"
               >

@@ -7,6 +7,7 @@ import { Upload, FileVideo, CheckCircle2, AlertCircle, Loader2, ArrowLeft, X } f
 import { stylesSupabase as supabase } from '@/integrations/supabase/stylesClient';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ensureBucket } from '@/lib/storage';
 
 interface UploadedClip {
   id: string;
@@ -30,6 +31,7 @@ export default function AddStyle() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [originalDbValue, setOriginalDbValue] = useState<string>('');
   const [loadingExistingClips, setLoadingExistingClips] = useState(false);
+  const [stylesBucket, setStylesBucket] = useState<string>((import.meta as any)?.env?.VITE_STYLES_BUCKET || 'clips');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -48,13 +50,29 @@ export default function AddStyle() {
   const loadExistingClips = async (styleName: string) => {
     setLoadingExistingClips(true);
     try {
-      const { data: files, error: filesError } = await supabase.storage
-        .from('clips')
+      let listRes = await supabase.storage
+        .from(stylesBucket)
         .list(styleName, {
           limit: 100,
           offset: 0
         });
 
+      if (listRes.error && /Bucket not found/i.test(listRes.error.message)) {
+        const created = await ensureBucket(stylesBucket, true);
+        if (created) {
+          listRes = await supabase.storage
+            .from(stylesBucket)
+            .list(styleName, { limit: 100, offset: 0 });
+        } else {
+          setStylesBucket('audio-files');
+          await ensureBucket('audio-files', true);
+          listRes = await supabase.storage
+            .from('audio-files')
+            .list(styleName, { limit: 100, offset: 0 });
+        }
+      }
+
+      const { data: files, error: filesError } = listRes;
       if (filesError) {
         console.error('Error loading existing clips:', filesError);
         return;
@@ -65,7 +83,7 @@ export default function AddStyle() {
       for (const file of files || []) {
         if (file.name && file.metadata) {
           const { data } = supabase.storage
-            .from('clips')
+            .from(stylesBucket)
             .getPublicUrl(`${styleName}/${file.name}`);
 
           const { data: clipMeta } = await supabase
@@ -188,9 +206,24 @@ export default function AddStyle() {
     if (isEditMode && clip.publicUrl) {
       try {
         const filePath = `${styleName}/${clip.name}`;
-        await supabase.storage
-          .from('clips')
+        let delRes = await supabase.storage
+          .from(stylesBucket)
           .remove([filePath]);
+        if (delRes.error && /Bucket not found/i.test(delRes.error.message)) {
+          const created = await ensureBucket(stylesBucket, true);
+          if (created) {
+            delRes = await supabase.storage
+              .from(stylesBucket)
+              .remove([filePath]);
+          } else {
+            setStylesBucket('audio-files');
+            await ensureBucket('audio-files', true);
+            delRes = await supabase.storage
+              .from('audio-files')
+              .remove([filePath]);
+          }
+        }
+        if (delRes.error) throw delRes.error;
 
         await supabase
           .from('clips_meta')
@@ -286,18 +319,33 @@ export default function AddStyle() {
         const fileName = `${uniquePersonName}_${Date.now()}_${i + 1}.${fileExtension}`;
         const filePath = `${styleName.trim()}/${fileName}`;
 
-        const { error } = await supabase.storage
-          .from('clips')
+        let uploadRes = await supabase.storage
+          .from(stylesBucket)
           .upload(filePath, clip.file, {
             upsert: true,
           });
 
-        if (error) {
-          throw new Error(`Upload failed for ${clip.name}: ${error.message}`);
+        if (uploadRes.error && /Bucket not found/i.test(uploadRes.error.message)) {
+          const created = await ensureBucket(stylesBucket, true);
+          if (created) {
+            uploadRes = await supabase.storage
+              .from(stylesBucket)
+              .upload(filePath, clip.file, { upsert: true });
+          } else {
+            setStylesBucket('audio-files');
+            await ensureBucket('audio-files', true);
+            uploadRes = await supabase.storage
+              .from('audio-files')
+              .upload(filePath, clip.file, { upsert: true });
+          }
+        }
+
+        if (uploadRes.error) {
+          throw new Error(`Upload failed for ${clip.name}: ${uploadRes.error.message}`);
         }
 
         const { data } = supabase.storage
-          .from('clips')
+          .from(stylesBucket)
           .getPublicUrl(filePath);
 
         clipData.push({
