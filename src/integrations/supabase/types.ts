@@ -289,6 +289,31 @@ export type Database = {
         }
         Relationships: []
       }
+      // Added for styles/clips feature
+      clips_meta: {
+        Row: {
+          created_at: string | null
+          duration: number | null
+          id: string
+          person: string
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration?: number | null
+          id?: string
+          person: string
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          duration?: number | null
+          id?: string
+          person?: string
+          url?: string
+        }
+        Relationships: []
+      }
       viewboard_cache: {
         Row: {
           channel_id: string | null

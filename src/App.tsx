@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import ExperiencePage from "./pages/ExperiencePage";
 import OAuthCallback from "./pages/OAuthCallback";
 import OAuthError from "./pages/OAuthError";
+import AddStyle from "./pages/AddStyle";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
                 <Route path="/" element={<ExperiencePage />} />
                 <Route path="/home" element={<ExperiencePage />} />
                 <Route path="/generate" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+                <Route path="/add-style" element={<ProtectedRoute><AddStyle /></ProtectedRoute>} />
                 <Route path="/oauth/callback" element={<OAuthCallback />} />
                 <Route path="/oauth/error" element={<OAuthError />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useWhop } from "@/contexts/WhopContext";
 import Navigation from "@/components/Navigation";
@@ -10,9 +10,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Video, Image, Music, Upload, FileAudio, X, Zap, Lightbulb, Play, Camera, Headphones, Sparkles, ArrowRight, CheckCircle2, AlertCircle } from "lucide-react";
+import { Video, Image, Music, Upload, FileAudio, X, Zap, Lightbulb, Play, Camera, Headphones, Sparkles, ArrowRight, CheckCircle2, AlertCircle, Plus, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { stylesSupabase } from "@/integrations/supabase/stylesClient";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { StyleManagement } from "@/components/StyleManagement";
 const Index = () => {
   const { isLoaded, isCheckingAccess, hasAccess } = useWhop();
 
@@ -33,6 +36,9 @@ const Index = () => {
   const [audioUrl, setAudioUrl] = useState("");
   const [isProcessingAudio, setIsProcessingAudio] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [styleManagementOpen, setStyleManagementOpen] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState<string>("");
+  const [availablePersons, setAvailablePersons] = useState<{ displayName: string; dbValue: string }[]>([]);
   const {
     apiKey,
     hasApiKey
@@ -49,6 +55,100 @@ const Index = () => {
     }
     return shuffled;
   };
+  // Fetch available persons/styles from Supabase 'clips' bucket
+  const fetchPersons = async () => {
+    try {
+      const { data: folders, error: foldersError } = await stylesSupabase.storage
+        .from('clips')
+        .list('', {
+          limit: 100,
+          offset: 0
+        });
+
+      if (foldersError) {
+        console.error('Error fetching folders:', foldersError);
+        return;
+      }
+
+      const styleFolders = folders?.filter(item => 
+        item.name !== 'audio' && item.metadata === null
+      ) || [];
+
+      const personMappings: { displayName: string; dbValue: string }[] = [];
+      
+      for (const folder of styleFolders) {
+        const displayName = folder.name;
+        const { data: folderFiles, error: folderError } = await stylesSupabase.storage
+          .from('clips')
+          .list(folder.name, {
+            limit: 100,
+            offset: 0
+          });
+
+        if (folderError) {
+          console.error('Error fetching folder files:', folderError);
+          continue;
+        }
+
+        const videoFiles = folderFiles?.filter(file => 
+          file.metadata && file.name.includes('.')
+        ) || [];
+
+        let dbValue = displayName.trim().split(' ').pop() || displayName;
+        
+        if (videoFiles.length > 0) {
+          const { data } = stylesSupabase.storage
+            .from('clips')
+            .getPublicUrl(`${folder.name}/${videoFiles[0].name}`);
+
+          const { data: clipData, error: clipError } = await stylesSupabase
+            .from('clips_meta')
+            .select('person')
+            .eq('url', data.publicUrl)
+            .limit(1);
+
+          if (!clipError && clipData && clipData.length > 0) {
+            dbValue = clipData[0].person;
+          }
+        }
+
+        personMappings.push({ displayName, dbValue });
+      }
+
+      setAvailablePersons(personMappings);
+    } catch (error) {
+      console.error('Error fetching persons:', error);
+    }
+  };
+
+  // Load styles on mount
+  useEffect(() => {
+    fetchPersons();
+  }, []);
+
+  // Helper to get public URLs of clips for a selected style (folder)
+  const getStyleClipUrls = async (styleDisplayName: string): Promise<string[]> => {
+    try {
+      const { data: folderFiles, error: folderError } = await stylesSupabase.storage
+        .from('clips')
+        .list(styleDisplayName, { limit: 200, offset: 0 });
+      if (folderError) throw folderError;
+      const videoFiles = (folderFiles || []).filter(f => f.metadata && f.name.includes('.'));
+      const urls: string[] = [];
+      for (const f of videoFiles) {
+        const { data } = stylesSupabase.storage
+          .from('clips')
+          .getPublicUrl(`${styleDisplayName}/${f.name}`);
+        urls.push(data.publicUrl);
+      }
+      return urls;
+    } catch (e) {
+      console.error('Failed to load style clips:', e);
+      toast({ title: 'Style clips error', description: 'Could not load clips for the selected style.', variant: 'destructive' });
+      return [];
+    }
+  };
+
   const handleAudioUpload = async (file: File) => {
     if (!file.type.startsWith('audio/')) {
       toast({
@@ -133,10 +233,20 @@ const Index = () => {
       });
       return;
     }
-    if (!contentLinks.trim()) {
+    // Build sources from either provided links or selected style (or both)
+    const manualUrls = contentLinks.split('\n').map(s => s.trim()).filter(Boolean);
+    let styleUrls: string[] = [];
+    if (!manualUrls.length && selectedPerson) {
+      styleUrls = await getStyleClipUrls(selectedPerson);
+    } else if (selectedPerson) {
+      // If both provided, include style clips too
+      styleUrls = await getStyleClipUrls(selectedPerson);
+    }
+    const allUrls = [...manualUrls, ...styleUrls];
+    if (allUrls.length === 0) {
       toast({
         title: "Missing Content",
-        description: "Please add video/image URLs.",
+        description: "Please add video/image URLs or select a style.",
         variant: "destructive"
       });
       return;
@@ -144,24 +254,18 @@ const Index = () => {
     setIsGenerating(true);
     try {
       // Generate JSON configuration
-      const urls = contentLinks.split('\n').filter(url => url.trim().length > 0);
-      if (urls.length === 0) {
-        toast({
-          title: "Invalid URLs",
-          description: "Please provide valid URLs.",
-          variant: "destructive"
-        });
-        return;
-      }
+      const urls = allUrls;
       const shuffledUrls = shuffleArray(urls);
       const duration = parseInt(videoDuration) || 30;
       const durationPerClip = Math.max(1, Math.floor(duration / shuffledUrls.length));
+      const usingStyleClips = styleUrls.length > 0;
+      const elementType = usingStyleClips ? 'video' : (videoType === 'clips' ? 'video' : 'image');
       const scenes = shuffledUrls.map(url => ({
         elements: [{
-          type: videoType === 'clips' ? 'video' : 'image',
+          type: elementType as 'video' | 'image',
           src: url.trim(),
           fit: 'cover',
-          ...(videoType === 'clips' ? {
+          ...(elementType === 'video' ? {
             scale: {
               width: 1920,
               height: 1080
@@ -260,6 +364,51 @@ const Index = () => {
             
             
             <CardContent className="space-y-8 p-8">
+              {/* Style Selection */}
+              <div className="space-y-6 p-6 bg-muted rounded-xl border border-[#E0E0E0]">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#E0E0E0] rounded-lg shadow-sm">
+                    <Headphones className="h-4 w-4 text-[#000000]" />
+                  </div>
+                  <Label className="text-lg font-semibold text-[#000000]">Choose Style</Label>
+                </div>
+                <div className="space-y-2">
+          <Label className="text-sm font-medium text-[#000000]">Style</Label>
+                  <Select value={selectedPerson} onValueChange={setSelectedPerson}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Select a style" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availablePersons.map((person) => (
+                        <SelectItem key={person.dbValue} value={person.displayName}>
+                          {person.displayName}
+                        </SelectItem>
+                      ))}
+                      <div className="border-t mt-2 pt-2 space-y-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start gap-2"
+                          onClick={() => (window.location.href = '/add-style')}
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add New Style
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-start gap-2"
+                          onClick={() => setStyleManagementOpen(true)}
+                        >
+                          <Settings className="h-4 w-4" />
+                          Manage Styles
+                        </Button>
+                      </div>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               {/* Video Type Selection */}
               <div className="space-y-6 p-6 bg-muted rounded-xl border border-[#E0E0E0]">
                 <div className="flex items-center gap-3">
