@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useWhop } from "../contexts/WhopContext";
 import { PaymentButton } from "../components/PaymentButton";
 import Homepage from "./Homepage";
+import Navigation from "@/components/Navigation";
 
 export default function ExperiencePage() {
   const { hasAccess, isCheckingAccess, user, login } = useWhop();
@@ -49,6 +50,7 @@ export default function ExperiencePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
       {hasAccess ? (
         <div className="container mx-auto px-4 py-8">
           {user && (

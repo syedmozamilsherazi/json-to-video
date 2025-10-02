@@ -40,6 +40,9 @@ export const StyleManagement = ({ isOpen, onClose, onStyleUpdated }: StyleManage
   const loadStyles = async () => {
     setLoading(true);
     try {
+      // Ensure the bucket exists before listing
+      await ensureBucket(stylesBucket, true);
+
       let foldersRes = await supabase.storage
         .from(stylesBucket)
         .list('', {
