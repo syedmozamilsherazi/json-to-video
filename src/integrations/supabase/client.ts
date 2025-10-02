@@ -7,8 +7,8 @@ const ENV_URL = (import.meta as any)?.env?.VITE_SUPABASE_URL;
 const ENV_KEY = (import.meta as any)?.env?.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 // Safe fallbacks to audio-to-clip-maker project so the app never crashes blank
-const FALLBACK_URL = "https://qcmueipwesracbrmwcfw.supabase.co";
-const FALLBACK_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjbXVlaXB3ZXNyYWNicm13Y2Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1ODQ2NjksImV4cCI6MjA3MzE2MDY2OX0.zeUgEGKvSeLzGAI6FwvupMjPMo2KYAU1P0VeK7T6zpg";
+const FALLBACK_URL = "https://lxozpynxgvhzxxwwhklk.supabase.co";
+const FALLBACK_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4b3pweW54Z3Zoenh4d3doa2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NjcxMjMsImV4cCI6MjA3MzM0MzEyM30.U86EvOrjuP0eFK2mPXnWFsMDkf7N0nA_8fUXb1vipV0";
 
 const SUPABASE_URL = ENV_URL || FALLBACK_URL;
 const SUPABASE_PUBLISHABLE_KEY = ENV_KEY || FALLBACK_KEY;
