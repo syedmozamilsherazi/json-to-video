@@ -685,6 +685,11 @@ const Index = () => {
           </Card>
         </div>
       </div>
+      <StyleManagement 
+        isOpen={styleManagementOpen} 
+        onClose={() => setStyleManagementOpen(false)} 
+        onStyleUpdated={fetchPersons}
+      />
     </div>;
 };
 export default Index;
