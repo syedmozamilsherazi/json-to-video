@@ -97,17 +97,16 @@ function UpsellScreen({ onLogin }: UpsellScreenProps) {
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button
-            onClick={onLogin}
+            onClick={() => {
+              const pricingSection = document.getElementById('pricing-section');
+              if (pricingSection) {
+                pricingSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
             className="px-8 py-4 bg-[#000000] hover:bg-[#000000]/90 text-white rounded-xl font-semibold text-lg transition-all duration-200 hover:scale-105 shadow-lg"
           >
             Get Started Free
           </button>
-          <div className="flex items-center gap-2 text-[#6E6E6E]">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-            <span>No credit card required</span>
-          </div>
         </div>
       </div>
 
@@ -165,26 +164,26 @@ function UpsellScreen({ onLogin }: UpsellScreenProps) {
         <div className="grid md:grid-cols-3 gap-8">
           <div className="text-center">
             <div className="w-12 h-12 bg-[#000000] text-white rounded-full flex items-center justify-center mx-auto mb-6 text-xl font-bold">1</div>
-            <h3 className="text-xl font-bold text-[#000000] mb-3">Upload Your Content</h3>
-            <p className="text-[#6E6E6E]">Upload your audio file and add video/image URLs or choose from our style library</p>
+            <h3 className="text-xl font-bold text-[#000000] mb-3">Enter Your JSON2Video API Key</h3>
+            <p className="text-[#6E6E6E]">Set up your JSON2Video API key in the navigation bar to get started</p>
           </div>
           
           <div className="text-center">
             <div className="w-12 h-12 bg-[#000000] text-white rounded-full flex items-center justify-center mx-auto mb-6 text-xl font-bold">2</div>
+            <h3 className="text-xl font-bold text-[#000000] mb-3">Upload Your Content</h3>
+            <p className="text-[#6E6E6E]">Upload your audio file and add video/image URLs or choose from our style library</p>
+        </div>
+        
+          <div className="text-center">
+            <div className="w-12 h-12 bg-[#000000] text-white rounded-full flex items-center justify-center mx-auto mb-6 text-xl font-bold">3</div>
             <h3 className="text-xl font-bold text-[#000000] mb-3">AI Processing</h3>
             <p className="text-[#6E6E6E]">Our AI automatically syncs your content, generates subtitles, and creates the perfect video</p>
           </div>
-          
-          <div className="text-center">
-            <div className="w-12 h-12 bg-[#000000] text-white rounded-full flex items-center justify-center mx-auto mb-6 text-xl font-bold">3</div>
-            <h3 className="text-xl font-bold text-[#000000] mb-3">Download & Share</h3>
-            <p className="text-[#6E6E6E]">Get your professional video in HD quality, ready to share on any platform</p>
-          </div>
         </div>
       </div>
-
+      
       {/* Pricing Section */}
-      <div className="mb-20">
+      <div id="pricing-section" className="mb-20">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-[#000000] mb-4">Simple, Transparent Pricing</h2>
           <p className="text-lg text-[#6E6E6E] max-w-2xl mx-auto">
@@ -205,8 +204,8 @@ function UpsellScreen({ onLogin }: UpsellScreenProps) {
                 <span className="text-xl text-[#6E6E6E]">/month</span>
               </div>
               <p className="text-[#6E6E6E]">Limited time offer for early adopters</p>
-            </div>
-            
+        </div>
+        
             <div className="space-y-4 mb-8 text-left">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-[#000000] rounded-full"></div>
@@ -231,12 +230,12 @@ function UpsellScreen({ onLogin }: UpsellScreenProps) {
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-[#000000] rounded-full"></div>
                 <span className="text-[#000000] font-medium">Style library access</span>
-              </div>
-            </div>
-            
+        </div>
+      </div>
+      
             <PaymentButton displayText="🛒 Subscribe Now - $9.99/month" />
           </div>
-        </div>
+      </div>
       </div>
 
     </div>
