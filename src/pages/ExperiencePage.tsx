@@ -121,34 +121,34 @@ function UpsellScreen({ onLogin }: UpsellScreenProps) {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          <div className="group p-8 bg-[#F2F2F2] rounded-2xl border border-[#E0E0E0] text-center hover:bg-[#E0E0E0] transition-all duration-300 hover:scale-105">
-            <div className="w-16 h-16 bg-[#E0E0E0] rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-[#000000] transition-colors">
-              <svg className="w-8 h-8 text-[#000000] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="group p-8 bg-[#F2F2F2] rounded-2xl border border-[#E0E0E0] text-center hover:bg-[#000000] transition-all duration-300 hover:scale-105 cursor-pointer min-h-[280px] flex flex-col">
+            <div className="w-16 h-16 bg-[#E0E0E0] rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-white transition-colors flex-shrink-0">
+              <svg className="w-8 h-8 text-[#000000] group-hover:text-[#000000] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-[#000000] mb-3">Smart AI Generation</h3>
-            <p className="text-[#6E6E6E] leading-relaxed">Advanced AI algorithms automatically create professional videos from your content and audio files</p>
+            <h3 className="text-xl font-bold text-[#000000] group-hover:text-white mb-3 transition-colors">Smart AI Generation</h3>
+            <p className="text-[#6E6E6E] group-hover:text-white leading-relaxed transition-colors flex-grow">Advanced AI algorithms automatically create professional videos from your content and audio files</p>
           </div>
 
-          <div className="group p-8 bg-[#F2F2F2] rounded-2xl border border-[#E0E0E0] text-center hover:bg-[#E0E0E0] transition-all duration-300 hover:scale-105">
-            <div className="w-16 h-16 bg-[#E0E0E0] rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-[#000000] transition-colors">
-              <svg className="w-8 h-8 text-[#000000] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="group p-8 bg-[#F2F2F2] rounded-2xl border border-[#E0E0E0] text-center hover:bg-[#000000] transition-all duration-300 hover:scale-105 cursor-pointer min-h-[280px] flex flex-col">
+            <div className="w-16 h-16 bg-[#E0E0E0] rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-white transition-colors flex-shrink-0">
+              <svg className="w-8 h-8 text-[#000000] group-hover:text-[#000000] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-[#000000] mb-3">Auto Subtitles</h3>
-            <p className="text-[#6E6E6E] leading-relaxed">Professional subtitle generation with custom styling, perfect timing, and multiple language support</p>
+            <h3 className="text-xl font-bold text-[#000000] group-hover:text-white mb-3 transition-colors">Auto Subtitles</h3>
+            <p className="text-[#6E6E6E] group-hover:text-white leading-relaxed transition-colors flex-grow">Professional subtitle generation with custom styling, perfect timing, and multiple language support</p>
           </div>
 
-          <div className="group p-8 bg-[#F2F2F2] rounded-2xl border border-[#E0E0E0] text-center hover:bg-[#E0E0E0] transition-all duration-300 hover:scale-105">
-            <div className="w-16 h-16 bg-[#E0E0E0] rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-[#000000] transition-colors">
-              <svg className="w-8 h-8 text-[#000000] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="group p-8 bg-[#F2F2F2] rounded-2xl border border-[#E0E0E0] text-center hover:bg-[#000000] transition-all duration-300 hover:scale-105 cursor-pointer min-h-[280px] flex flex-col">
+            <div className="w-16 h-16 bg-[#E0E0E0] rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-white transition-colors flex-shrink-0">
+              <svg className="w-8 h-8 text-[#000000] group-hover:text-[#000000] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-[#000000] mb-3">Lightning Fast</h3>
-            <p className="text-[#6E6E6E] leading-relaxed">Generate professional videos in minutes, not hours. Our optimized infrastructure ensures quick processing</p>
+            <h3 className="text-xl font-bold text-[#000000] group-hover:text-white mb-3 transition-colors">Lightning Fast</h3>
+            <p className="text-[#6E6E6E] group-hover:text-white leading-relaxed transition-colors flex-grow">Generate professional videos in minutes, not hours. Our optimized infrastructure ensures quick processing</p>
           </div>
         </div>
       </div>
@@ -239,23 +239,6 @@ function UpsellScreen({ onLogin }: UpsellScreenProps) {
         </div>
       </div>
 
-      {/* Login Section */}
-      <div className="text-center">
-        <div className="bg-[#F2F2F2] rounded-2xl border border-[#E0E0E0] p-8 max-w-md mx-auto">
-          <h3 className="text-2xl font-bold text-[#000000] mb-2">Already subscribed?</h3>
-          <p className="text-[#6E6E6E] mb-6">Login to access your account and start creating</p>
-          
-          <button
-            onClick={onLogin}
-            className="w-full bg-[#000000] hover:bg-[#000000]/90 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 hover:scale-105 flex items-center justify-center gap-3"
-          >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-            Login with Whop
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
