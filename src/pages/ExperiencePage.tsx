@@ -121,34 +121,34 @@ function UpsellScreen({ onLogin }: UpsellScreenProps) {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          <div className="group p-8 bg-[#F2F2F2] rounded-2xl border border-[#E0E0E0] text-center hover:bg-[#000000] transition-all duration-300 hover:scale-105 cursor-pointer min-h-[280px] flex flex-col">
-            <div className="w-16 h-16 bg-[#E0E0E0] rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-white transition-colors flex-shrink-0">
-              <svg className="w-8 h-8 text-[#000000] group-hover:text-[#000000] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="group p-8 bg-transparent rounded-2xl border border-[#E0E0E0] text-center hover:bg-[#F2F2F2] transition-all duration-300 cursor-pointer">
+            <div className="w-16 h-16 bg-[#E0E0E0] rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-[#000000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-[#000000] group-hover:text-white mb-3 transition-colors">Smart AI Generation</h3>
-            <p className="text-[#6E6E6E] group-hover:text-white leading-relaxed transition-colors flex-grow">Advanced AI algorithms automatically create professional videos from your content and audio files</p>
+            <h3 className="text-xl font-bold text-[#000000] mb-3">Smart AI Generation</h3>
+            <p className="text-[#6E6E6E] leading-relaxed">Advanced AI algorithms automatically create professional videos from your content and audio files</p>
           </div>
 
-          <div className="group p-8 bg-[#F2F2F2] rounded-2xl border border-[#E0E0E0] text-center hover:bg-[#000000] transition-all duration-300 hover:scale-105 cursor-pointer min-h-[280px] flex flex-col">
-            <div className="w-16 h-16 bg-[#E0E0E0] rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-white transition-colors flex-shrink-0">
-              <svg className="w-8 h-8 text-[#000000] group-hover:text-[#000000] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="group p-8 bg-transparent rounded-2xl border border-[#E0E0E0] text-center hover:bg-[#F2F2F2] transition-all duration-300 cursor-pointer">
+            <div className="w-16 h-16 bg-[#E0E0E0] rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-[#000000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-[#000000] group-hover:text-white mb-3 transition-colors">Auto Subtitles</h3>
-            <p className="text-[#6E6E6E] group-hover:text-white leading-relaxed transition-colors flex-grow">Professional subtitle generation with custom styling, perfect timing, and multiple language support</p>
+            <h3 className="text-xl font-bold text-[#000000] mb-3">Auto Subtitles</h3>
+            <p className="text-[#6E6E6E] leading-relaxed">Professional subtitle generation with custom styling, perfect timing, and multiple language support</p>
           </div>
 
-          <div className="group p-8 bg-[#F2F2F2] rounded-2xl border border-[#E0E0E0] text-center hover:bg-[#000000] transition-all duration-300 hover:scale-105 cursor-pointer min-h-[280px] flex flex-col">
-            <div className="w-16 h-16 bg-[#E0E0E0] rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-white transition-colors flex-shrink-0">
-              <svg className="w-8 h-8 text-[#000000] group-hover:text-[#000000] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="group p-8 bg-transparent rounded-2xl border border-[#E0E0E0] text-center hover:bg-[#F2F2F2] transition-all duration-300 cursor-pointer">
+            <div className="w-16 h-16 bg-[#E0E0E0] rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-[#000000]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-[#000000] group-hover:text-white mb-3 transition-colors">Lightning Fast</h3>
-            <p className="text-[#6E6E6E] group-hover:text-white leading-relaxed transition-colors flex-grow">Generate professional videos in minutes, not hours. Our optimized infrastructure ensures quick processing</p>
+            <h3 className="text-xl font-bold text-[#000000] mb-3">Lightning Fast</h3>
+            <p className="text-[#6E6E6E] leading-relaxed">Generate professional videos in minutes, not hours. Our optimized infrastructure ensures quick processing</p>
           </div>
         </div>
       </div>
@@ -193,7 +193,7 @@ function UpsellScreen({ onLogin }: UpsellScreenProps) {
         </div>
         
         <div className="max-w-lg mx-auto">
-          <div className="bg-[#F2F2F2] rounded-3xl border border-[#E0E0E0] p-8 text-center relative overflow-hidden">
+          <div className="bg-transparent rounded-3xl border border-[#E0E0E0] p-8 text-center relative overflow-hidden hover:bg-[#F2F2F2] transition-all duration-300">
             <div className="absolute top-0 right-0 bg-[#000000] text-white px-4 py-2 rounded-bl-2xl text-sm font-semibold">
               50% OFF
             </div>
