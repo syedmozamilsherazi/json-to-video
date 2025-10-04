@@ -63,7 +63,7 @@ export default function ExperiencePage() {
           <Homepage />
         </div>
       ) : (
-        <div className="flex justify-center items-center h-screen px-8">
+        <div className="flex justify-center items-start min-h-screen px-8 pt-20">
           <UpsellScreen onLogin={login} />
         </div>
       )}
