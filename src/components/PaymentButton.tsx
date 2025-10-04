@@ -61,8 +61,7 @@ export function PaymentButton({ displayText, planId }: PaymentButtonProps) {
     <Button 
       onClick={handleClick} 
       disabled={isLoading}
-      variant="neutralSelected"
-      className="w-full h-12 text-base font-semibold rounded-xl text-[#6B6F76] hover:text-[#000000]"
+      className="w-full h-12 text-base font-semibold bg-[#000000] hover:bg-[#000000]/90 text-white rounded-xl shadow-sm disabled:opacity-50"
       size="lg"
     >
       {isLoading ? (
