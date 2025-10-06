@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useWhop } from "../contexts/WhopContext";
+import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 import { PaymentButton } from "../components/PaymentButton";
 import Homepage from "./Homepage";
 import Navigation from "@/components/Navigation";
@@ -39,10 +40,10 @@ export default function ExperiencePage() {
 
   if (isCheckingAccess) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>Checking access...</p>
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <LoadingIndicator label="Checking access..." fullHeight />
         </div>
       </div>
     );

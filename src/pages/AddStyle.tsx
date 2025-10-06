@@ -8,6 +8,7 @@ import { stylesSupabase as supabase } from '@/integrations/supabase/stylesClient
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ensureBucket } from '@/lib/storage';
+import { LoadingIndicator } from '@/components/ui/LoadingIndicator';
 
 interface UploadedClip {
   id: string;
@@ -433,6 +434,9 @@ export default function AddStyle() {
             <CardTitle className="text-[#000000]">{isEditMode ? 'Edit Style' : 'Create a New Style'}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {isEditMode && loadingExistingClips && (
+              <LoadingIndicator label="Loading existing clips..." fullHeight />
+            )}
             <div className="space-y-2">
               <Label className="text-sm font-medium text-[#000000]">Style Name</Label>
               <Input 
